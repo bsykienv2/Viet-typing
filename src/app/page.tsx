@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Be_Vietnam_Pro } from 'next/font/google';
-import { motion } from 'framer-motion';
-import { Keyboard, Users, BarChart3, Shield, ChevronRight, Zap, Target, Award, BookOpen, GraduationCap, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Keyboard, Users, BarChart3, Shield, ChevronRight, Zap, Target, Award, GraduationCap, Star, HelpCircle, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { useSound } from '@/contexts/SoundContext';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -12,12 +13,101 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export default function HomePage() {
+  const { playSound } = useSound();
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  const toggleFaq = (index: number) => {
+    playSound('click');
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
+
+  const stats = [
+    { value: '60+', label: 'Bài học', desc: 'Lộ trình bài bản từ cơ bản đến nâng cao', color: 'text-sky-600', bg: 'bg-sky-50', border: 'border-sky-100' },
+    { value: '3', label: 'Cấp độ', desc: 'Sơ cấp, Trung cấp và Cao cấp', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+    { value: '100%', label: 'Miễn phí', desc: 'Không quảng cáo, không thu phí học sinh', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+    { value: '2', label: 'Kiểu gõ', desc: 'Hỗ trợ song song cả Telex và VNI', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+  ];
+
+  const testimonials = [
+    {
+      name: 'Nguyễn Minh Anh',
+      role: 'Học sinh Lớp 8A',
+      school: 'Trường THCS Nguyễn Du',
+      avatar: '🦁',
+      content: 'Em rất thích VietTyping vì có avatar emoji siêu dễ thương! Nhờ luyện tập mỗi ngày 15 phút, tốc độ gõ Telex của em đã tăng từ 20 WPM lên 45 WPM.',
+      color: 'bg-sky-50 border-sky-100'
+    },
+    {
+      name: 'Lê Thảo Vy',
+      role: 'Học sinh Lớp 7C',
+      school: 'Trường THCS Lê Quý Đôn',
+      avatar: '🐰',
+      content: 'Giao diện của trang web cực kỳ sáng sủa và dễ sử dụng, giống như đang chơi game vậy. Em đã duy trì được chuỗi streak 15 ngày liên tiếp rồi!',
+      color: 'bg-indigo-50 border-indigo-100'
+    },
+    {
+      name: 'Trần Tuấn Kiệt',
+      role: 'Học sinh Lớp 9B',
+      school: 'Trường THCS Trần Đại Nghĩa',
+      avatar: '🐯',
+      content: 'Trước đây em gõ VNI rất chậm và hay nhìn bàn phím. Nhờ bàn phím ảo highlight phím tiếp theo của VietTyping, em đã sửa được thói quen xấu này.',
+      color: 'bg-emerald-50 border-emerald-100'
+    },
+    {
+      name: 'Phạm Gia Bảo',
+      role: 'Học sinh Lớp 6A',
+      school: 'Trường THCS Trưng Vương',
+      avatar: '🐼',
+      content: 'Chúng em thi đua gõ phím xem ai có nhiều XP hơn trên bảng xếp hạng của lớp. Việc học tin học bây giờ vui và sôi nổi hơn hẳn!',
+      color: 'bg-amber-50 border-amber-100'
+    }
+  ];
+
+  const faqs = [
+    {
+      question: 'VietTyping là gì?',
+      answer: 'VietTyping là nền tảng luyện gõ phím 10 ngón tiếng Việt hoàn toàn miễn phí dành riêng cho học sinh Trung học cơ sở (THCS), giúp học sinh rèn luyện kỹ năng gõ nhanh và chính xác với hai kiểu gõ phổ biến nhất là Telex và VNI.'
+    },
+    {
+      question: 'Tôi có cần đăng ký tài khoản để học không?',
+      answer: 'Học sinh không đăng ký tài khoản có thể luyện tập gõ thử tối đa 3 bài học đầu tiên ở mỗi cấp độ (Sơ cấp, Trung cấp, Cao cấp). Để có thể mở khóa toàn bộ 60+ bài học và lưu trữ thành tích (XP, streak, lịch sử gõ), bạn cần đăng ký bằng cách thiết lập thông tin cá nhân cơ bản.'
+    },
+    {
+      question: 'Telex và VNI khác nhau như thế nào?',
+      answer: 'Telex dùng phím chữ để gõ dấu (s=sắc, f=huyền, r=hỏi, x=ngã, j=nặng, aa=â, aw=ă, ee=ê, oo=ô, ow=ơ, uw=ư, dd=đ). VNI dùng phím số ở hàng trên cùng để gõ dấu (1=sắc, 2=huyền, 3=hỏi, 4=ngã, 5=nặng, 6=mũ â/ê/ô, 7=mũ móc ơ/ư, 8=trăng ă, 9=gạch đ).'
+    },
+    {
+      question: 'Làm thế nào để luyện gõ 10 ngón đúng tư thế?',
+      answer: 'Luôn đặt hai ngón tay trỏ lên các phím định vị có gờ nổi là F và J. Giữ lưng thẳng, mắt nhìn màn hình và dùng ngón cái để nhấn phím Cách (Spacebar). Không được nhìn xuống bàn phím khi gõ, hãy tin tưởng vào cảm giác tay của mình!'
+    },
+    {
+      question: 'Giáo viên quản lý học sinh và lớp học như thế nào?',
+      answer: 'Giáo viên đăng nhập bằng mật khẩu vào trang Giáo viên để tạo lớp học, nhận mã lớp, thiết lập ngưỡng chấm đạt (WPM & độ chính xác) và giám sát trực tiếp thời gian thực kết quả gõ phím của toàn bộ học sinh trong lớp.'
+    },
+    {
+      question: 'Hệ thống XP và Chuỗi ngày (Streak) hoạt động ra sao?',
+      answer: 'Mỗi bài luyện tập thành công sẽ mang lại cho bạn 100 - 150 điểm XP tùy thuộc vào điểm số. Nếu bạn hoàn thành ít nhất 1 bài gõ mỗi ngày, chuỗi Streak của bạn sẽ tăng lên để ghi nhận sự chăm chỉ của bạn!'
+    },
+    {
+      question: 'Tại sao tôi không thể mở khóa bài học tiếp theo?',
+      answer: 'Mặc định hệ thống áp dụng chế độ mở khóa tuần tự (phải hoàn thành bài trước mới mở bài sau). Ngoài ra giáo viên có thể thay đổi cài đặt này sang chế độ mở khóa tự do để học sinh lựa chọn bài học tùy ý.'
+    },
+    {
+      question: 'VietTyping có chạy tốt trên điện thoại hoặc máy tính bảng không?',
+      answer: 'VietTyping được thiết kế tương thích với mọi thiết bị. Tuy nhiên, để luyện gõ phím 10 ngón một cách hiệu quả và chuẩn nhất, chúng tôi khuyên bạn nên sử dụng máy tính cá nhân hoặc máy tính ở phòng thực hành trường học có bàn phím vật lý.'
+    },
+    {
+      question: 'Làm thế nào để xem bảng xếp hạng học sinh đạt điểm cao?',
+      answer: 'Khi bạn vào giao diện "Luyện gõ phím", ở phần bên trái của màn hình sẽ hiển thị bảng xếp hạng Top 20 học sinh có điểm tích lũy XP và tốc độ gõ WPM cao nhất để các bạn cùng thi đua.'
+    }
+  ];
+
   return (
     <main className={`min-h-screen bg-slate-50 text-slate-800 ${beVietnamPro.className}`}>
 
       {/* ===== NAVIGATION BAR ===== */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="bg-gradient-to-br from-sky-500 to-indigo-600 p-2 rounded-xl text-white shadow-md shadow-sky-500/20">
               <Keyboard className="w-5 h-5" />
@@ -53,18 +143,19 @@ export default function HomePage() {
       </nav>
 
       {/* ===== HERO SECTION ===== */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-sky-50/50 to-slate-50 py-20 lg:py-28">
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-sky-50/50 to-slate-50 py-16 lg:py-24">
         {/* Decorative blobs */}
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-sky-100/60 blur-[100px] pointer-events-none" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-100/60 blur-[100px] pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left - Text */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
+              className="lg:col-span-7"
             >
               <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-sky-100 border border-sky-200 text-sky-700 text-xs font-bold rounded-full mb-6 uppercase tracking-wider">
                 <Star className="w-3.5 h-3.5 fill-sky-500 text-sky-500" />
@@ -81,14 +172,14 @@ export default function HomePage() {
                 Chuyên Nghiệp
               </h1>
 
-              <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-lg">
-                Hệ thống 60 bài học từ cơ bản đến nâng cao, hỗ trợ gõ <strong className="text-slate-700">Telex</strong> & <strong className="text-slate-700">VNI</strong>, giúp học sinh THCS rèn luyện kỹ năng gõ phím 10 ngón chuẩn quốc tế.
+              <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-xl">
+                Hệ thống 60 bài học từ sơ cấp đến cao cấp, hỗ trợ cả kiểu gõ <strong className="text-slate-700">Telex</strong> và <strong className="text-slate-700">VNI</strong> trên cùng một giao diện, giúp học sinh rèn luyện kỹ năng gõ phím 10 ngón chuẩn xác.
               </p>
 
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/typing"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-base font-bold rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/35 transition-all active:scale-[0.97] border-2 border-sky-400/30"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-base font-bold rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/35 transition-all active:scale-[0.97] border-2 border-sky-400/30 font-black"
                 >
                   <Keyboard className="w-5 h-5" />
                   Bắt đầu luyện tập miễn phí
@@ -101,26 +192,6 @@ export default function HomePage() {
                   Dành cho Giáo viên
                 </Link>
               </div>
-
-              {/* Quick stats */}
-              <div className="flex flex-wrap gap-6 mt-10 pt-6 border-t border-slate-200">
-                <div>
-                  <div className="text-2xl font-black text-sky-600">60+</div>
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Bài học</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-indigo-600">3</div>
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cấp độ</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-emerald-600">100%</div>
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Miễn phí</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-black text-amber-600">2</div>
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Kiểu gõ (Telex & VNI)</div>
-                </div>
-              </div>
             </motion.div>
 
             {/* Right - Visual illustration */}
@@ -128,7 +199,7 @@ export default function HomePage() {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="hidden lg:flex items-center justify-center"
+              className="hidden lg:flex items-center justify-center lg:col-span-5"
             >
               <div className="relative w-full max-w-md">
                 {/* Keyboard illustration card */}
@@ -189,18 +260,40 @@ export default function HomePage() {
               </div>
             </motion.div>
           </div>
+
+          {/* ===== HIGHLY PROMINENT CENTERED STATS ===== */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mt-20 pt-12 border-t border-slate-200">
+            {stats.map((s, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className={`p-6 ${s.bg} rounded-3xl border-2 ${s.border} shadow-sm text-center flex flex-col justify-between items-center transition-all hover:scale-105 hover:shadow-md`}
+              >
+                <div className={`text-4xl md:text-5xl lg:text-6xl font-black font-sans ${s.color} tracking-tight mb-2`}>
+                  {s.value}
+                </div>
+                <div>
+                  <h3 className="text-base md:text-lg font-black text-slate-800 mb-1">{s.label}</h3>
+                  <p className="text-xs md:text-sm text-slate-400 font-medium">{s.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
         </div>
       </section>
 
       {/* ===== FEATURES SECTION ===== */}
       <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-800 mb-4">
               Tại sao chọn VietTyping?
             </h2>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-              Được thiết kế riêng cho học sinh Trung học cơ sở Việt Nam với lộ trình bài bản và công cụ quản trị cho Giáo viên
+            <p className="text-lg text-slate-400 max-w-3xl mx-auto">
+              Thiết kế đẹp mắt, vui nhộn tương tự typing.com, dành riêng cho học sinh THCS với lộ trình bài bản và tính năng giám sát tối ưu cho Giáo viên.
             </p>
           </div>
 
@@ -211,14 +304,14 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0 }}
-              className="bg-sky-50/60 border-2 border-sky-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+              className="bg-sky-50/60 border-2 border-sky-100 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-lg transition-all"
             >
               <div className="bg-sky-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-sky-500/20">
                 <Zap className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-extrabold text-slate-800 mb-2">60 bài học có lộ trình</h3>
               <p className="text-slate-500 leading-relaxed">
-                Từ Sơ cấp (làm quen hàng phím) → Trung cấp (từ ghép, câu ngắn) → Cao cấp (đoạn văn dài). Tất cả nội dung đều bằng tiếng Việt có dấu.
+                Chia đều thành Sơ cấp (làm quen phím cơ bản) → Trung cấp (gõ từ ghép, câu ngắn) → Cao cấp (chinh phục văn bản tiếng Việt thực tế).
               </p>
             </motion.div>
 
@@ -228,14 +321,14 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="bg-indigo-50/60 border-2 border-indigo-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+              className="bg-indigo-50/60 border-2 border-indigo-100 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-lg transition-all"
             >
               <div className="bg-indigo-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-indigo-500/20">
                 <Keyboard className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-extrabold text-slate-800 mb-2">Hỗ trợ Telex & VNI</h3>
               <p className="text-slate-500 leading-relaxed">
-                Học sinh tự do chọn kiểu gõ dấu tiếng Việt phù hợp. Giáo viên có thể bắt buộc lớp học chỉ dùng một kiểu gõ duy nhất.
+                Cho phép học sinh linh hoạt lựa chọn kiểu gõ phù hợp. Giáo viên có quyền bắt buộc học sinh sử dụng kiểu gõ cụ thể theo bài thi.
               </p>
             </motion.div>
 
@@ -245,14 +338,14 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="bg-emerald-50/60 border-2 border-emerald-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+              className="bg-emerald-50/60 border-2 border-emerald-100 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-lg transition-all"
             >
               <div className="bg-emerald-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-emerald-500/20">
                 <Target className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-extrabold text-slate-800 mb-2">Bàn phím ảo trực quan</h3>
               <p className="text-slate-500 leading-relaxed">
-                Bàn phím ảo hướng dẫn ngón tay đặt đúng vị trí, highlight phím cần gõ tiếp theo, phản hồi âm thanh đúng/sai tức thì.
+                Hướng dẫn đặt tay chính xác, highlight nút phím tiếp theo và cung cấp phản hồi âm thanh gõ phím sống động theo thời gian thực.
               </p>
             </motion.div>
 
@@ -262,14 +355,14 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="bg-amber-50/60 border-2 border-amber-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+              className="bg-amber-50/60 border-2 border-amber-100 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-lg transition-all"
             >
               <div className="bg-amber-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-amber-500/20">
                 <Award className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Hệ thống XP & Streak</h3>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">XP & Chuỗi ngày Streak</h3>
               <p className="text-slate-500 leading-relaxed">
-                Tích lũy điểm XP, duy trì chuỗi ngày luyện tập, nhận sao đánh giá 3 mức. Gamification giúp học sinh luôn có động lực.
+                Học sinh tích lũy điểm XP kinh nghiệm, duy trì Streak ngày học chăm chỉ và mở khóa các huy hiệu sao đánh giá, tạo động lực cạnh tranh lành mạnh.
               </p>
             </motion.div>
 
@@ -279,14 +372,14 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.4 }}
-              className="bg-rose-50/60 border-2 border-rose-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+              className="bg-rose-50/60 border-2 border-rose-100 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-lg transition-all"
             >
               <div className="bg-rose-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-rose-500/20">
                 <Users className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Quản trị Giáo viên</h3>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Giám sát của Giáo viên</h3>
               <p className="text-slate-500 leading-relaxed">
-                Giáo viên tạo lớp học, chia sẻ mã tham gia, giám sát tiến độ học sinh realtime, thiết lập ngưỡng chấm đạt WPM & độ chính xác.
+                Quản lý lớp học thông qua mã lớp. Theo dõi kết quả và sự tiến bộ của học sinh bằng biểu đồ và danh sách trực tiếp cực kỳ trực quan.
               </p>
             </motion.div>
 
@@ -296,65 +389,119 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.5 }}
-              className="bg-purple-50/60 border-2 border-purple-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+              className="bg-purple-50/60 border-2 border-purple-100 rounded-3xl p-8 hover:-translate-y-1 hover:shadow-lg transition-all"
             >
               <div className="bg-purple-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-purple-500/20">
                 <BarChart3 className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-extrabold text-slate-800 mb-2">Thống kê chi tiết</h3>
               <p className="text-slate-500 leading-relaxed">
-                Theo dõi tốc độ gõ (WPM), độ chính xác, số bài hoàn thành. Dashboard tổng quan với biểu đồ phân bổ kiểu gõ Telex/VNI.
+                Cung cấp báo cáo WPM (tốc độ gõ), độ chuẩn xác và lỗi thường gặp để học sinh khắc phục và tự hoàn thiện khả năng gõ của mình.
               </p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ===== HOW IT WORKS SECTION ===== */}
-      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">
-              Cách hoạt động
+      {/* ===== STUDENT TESTIMONIALS SECTION ===== */}
+      <section className="py-20 bg-slate-50">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 border border-amber-200 text-amber-800 text-xs font-bold rounded-full mb-3">
+              <MessageSquare className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              Nhận Xét Từ Học Sinh
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-800">
+              Các bạn học sinh nói gì về VietTyping?
             </h2>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-              Chỉ cần 3 bước đơn giản để bắt đầu luyện gõ phím tiếng Việt
+            <p className="text-lg text-slate-400 mt-2">
+              Luyện gõ phím không còn nhàm chán nhờ có sự kết hợp thú vị giữa học tập và trò chơi!
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Step 1 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-sky-500 text-white text-2xl font-black rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-sky-500/20 border-2 border-sky-400/50">
-                01
-              </div>
-              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Chọn cấp độ</h3>
-              <p className="text-slate-500 leading-relaxed">
-                Bắt đầu từ <strong>Sơ cấp</strong> nếu bạn mới học gõ phím, hoặc nhảy thẳng đến <strong>Trung cấp / Cao cấp</strong> để thử thách bản thân.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {testimonials.map((t, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                className={`p-6 rounded-3xl border-2 ${t.color} shadow-sm flex flex-col justify-between`}
+              >
+                <p className="text-slate-600 italic leading-relaxed text-sm md:text-base mb-6">
+                  "{t.content}"
+                </p>
+                <div className="flex items-center gap-3 border-t border-slate-200/60 pt-4">
+                  <span className="text-4xl bg-white p-2 rounded-2xl border border-slate-100 shadow-inner">
+                    {t.avatar}
+                  </span>
+                  <div>
+                    <h4 className="font-extrabold text-slate-800 text-sm md:text-base">{t.name}</h4>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">{t.role}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">{t.school}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Step 2 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-indigo-500 text-white text-2xl font-black rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-500/20 border-2 border-indigo-400/50">
-                02
-              </div>
-              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Luyện gõ tiếng Việt</h3>
-              <p className="text-slate-500 leading-relaxed">
-                Gõ theo bàn phím ảo hướng dẫn, sử dụng kiểu gõ <strong>Telex</strong> hoặc <strong>VNI</strong> để tạo dấu tiếng Việt trên cùng giao diện.
-              </p>
+      {/* ===== Q&A (FAQ) SECTION ===== */}
+      <section className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-100 border border-sky-200 text-sky-800 text-xs font-bold rounded-full mb-3">
+              <HelpCircle className="w-3.5 h-3.5 text-sky-500" />
+              Giải Đáp Thắc Mắc
             </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-800">
+              Câu Hỏi Thường Gặp
+            </h2>
+            <p className="text-lg text-slate-400 mt-2">
+              Mọi thắc mắc của bạn về VietTyping sẽ được giải đáp tại đây!
+            </p>
+          </div>
 
-            {/* Step 3 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500 text-white text-2xl font-black rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 border-2 border-emerald-400/50">
-                03
-              </div>
-              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Nhận kết quả & tiến bộ</h3>
-              <p className="text-slate-500 leading-relaxed">
-                Xem tốc độ WPM, độ chính xác, tích lũy XP và nhận sao đánh giá. Giáo viên giám sát trực tiếp tiến độ của cả lớp.
-              </p>
-            </div>
+          <div className="space-y-4">
+            {faqs.map((faq, idx) => {
+              const isOpen = openFaqIndex === idx;
+              return (
+                <div
+                  key={idx}
+                  className={`border-2 rounded-2xl transition-all overflow-hidden ${
+                    isOpen ? 'border-sky-300 bg-sky-50/20' : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+                >
+                  <button
+                    onClick={() => toggleFaq(idx)}
+                    className="w-full px-6 py-4 flex items-center justify-between text-left font-bold text-slate-800 text-base md:text-lg focus:outline-none cursor-pointer"
+                  >
+                    <span>{idx + 1}. {faq.question}</span>
+                    {isOpen ? (
+                      <ChevronUp className="w-5 h-5 text-sky-500 shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />
+                    )}
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="px-6 pb-5 pt-1 text-slate-500 leading-relaxed text-sm md:text-base border-t border-slate-100">
+                          {faq.answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -368,7 +515,7 @@ export default function HomePage() {
             Sẵn sàng trở thành "Cao thủ Gõ Phím"? 🚀
           </h2>
           <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
-            Hơn 60 bài học tiếng Việt, hệ thống gamification, bàn phím ảo trực quan — tất cả đều miễn phí. Bắt đầu ngay hôm nay!
+            Hơn 60 bài học tiếng Việt, hệ thống thi đua tích lũy XP, bàn phím ảo sinh động — tất cả đều hoàn toàn miễn phí.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
@@ -391,7 +538,7 @@ export default function HomePage() {
 
       {/* ===== FOOTER ===== */}
       <footer className="py-10 bg-slate-800 text-slate-400">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="bg-gradient-to-br from-sky-500 to-indigo-600 p-1.5 rounded-lg text-white">
               <Keyboard className="w-4 h-4" />

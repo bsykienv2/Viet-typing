@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { notFound, useRouter } from 'next/navigation';
 import { lessons } from '@/data/lessons';
 import TypingPractice, { TypingTask } from '@/components/TypingPractice';
@@ -8,6 +8,7 @@ import CompletionModal from '@/components/CompletionModal';
 import { IoArrowBack, IoArrowForward } from 'react-icons/io5';
 import { TelemetryPayload } from '@/types/lesson';
 import { Be_Vietnam_Pro } from 'next/font/google';
+import { useStudent } from '@/contexts/StudentContext';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -28,6 +29,7 @@ interface Stats {
 
 export default function LessonPage({ params }: Props) {
   const router = useRouter();
+  const { isConfigured } = useStudent();
   const [stats, setStats] = useState<Stats | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [resetKey, setResetKey] = useState(0);
@@ -40,8 +42,26 @@ export default function LessonPage({ params }: Props) {
     notFound();
   }
 
+  // Calculate the index of this lesson in its specific level
+  const levelLessons = useMemo(() => {
+    if (!lesson) return [];
+    return lessons.filter((l) => l.level === lesson.level);
+  }, [lesson]);
+
+  const lessonIndexInLevel = useMemo(() => {
+    if (!lesson || levelLessons.length === 0) return -1;
+    return levelLessons.findIndex((l) => l.id === lesson.id);
+  }, [lesson, levelLessons]);
+
+  // Enforce registration check
+  useEffect(() => {
+    if (lessonIndexInLevel >= 3 && !isConfigured) {
+      router.replace('/typing?triggerRegister=true');
+    }
+  }, [lessonIndexInLevel, isConfigured, router]);
+
   // Load teacher requirements from localStorage on mount
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const rulesStr = localStorage.getItem('viettyping_admin_rules');
       if (rulesStr) {
@@ -133,6 +153,20 @@ export default function LessonPage({ params }: Props) {
       router.push('/typing');
     }
   }, [getNextLesson, router]);
+
+  // Don't render the typing task UI if user is not authorized to access this lesson
+  if (lessonIndexInLevel >= 3 && !isConfigured) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-2xl border-2 border-slate-200 shadow-md text-center max-w-md">
+          <div className="text-4xl mb-4">🔒</div>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">Bài học bị giới hạn</h2>
+          <p className="text-slate-500 mb-4">Bạn cần đăng ký thông tin để tiếp tục học bài học này.</p>
+          <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className={`min-h-screen bg-slate-50 text-slate-800 relative overflow-hidden py-6 ${beVietnamPro.className}`}>
