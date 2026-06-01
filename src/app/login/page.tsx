@@ -136,30 +136,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!forgotEmail) return;
-
-    setLoading(true);
-    setMessage(null);
-    playSound("click");
-
-    try {
-      const res = await resetPassword(forgotEmail);
-      if (res.success && res.newPassword) {
-        playSound("tada");
-        setTempPassword(res.newPassword);
-      } else {
-        playSound("error");
-        setMessage({ type: "error", text: res.error || "Email không khớp với tài khoản thường nào." });
-      }
-    } catch (err) {
-      playSound("error");
-      setMessage({ type: "error", text: "Lỗi máy chủ!" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Forgot password is now handled via admin contact info
 
   const triggerGoogleLogin = () => {
     playSound("click");
@@ -282,82 +259,36 @@ export default function LoginPage() {
 
         {/* FORMS */}
         {showForgotPassword ? (
-          /* FORGOT PASSWORD FORM */
-          <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
-            <div className="text-center mb-4">
-              <h3 className="font-extrabold text-slate-800 text-base">Khôi phục mật khẩu</h3>
-              <p className="text-xs text-slate-400 font-medium mt-1">
-                Nhập email đã đăng ký. Hệ thống sẽ sinh mật khẩu mới và gửi về hòm thư của bạn.
+          /* FORGOT PASSWORD INFO CARD */
+          <div className="space-y-6 py-2 text-center">
+            <div className="w-16 h-16 bg-indigo-50 border-2 border-indigo-200 rounded-full flex items-center justify-center mx-auto text-3xl animate-pulse">
+              🔑
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-black text-slate-800">Quên mật khẩu?</h3>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wide">Vui lòng liên hệ với Admin</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-bold text-slate-500 leading-relaxed text-left space-y-2">
+              <p className="text-indigo-600 font-extrabold flex items-center gap-1">
+                <span>💁‍♂️</span> Hướng dẫn cấp lại mật khẩu:
               </p>
+              <p>Bạn không thể tự khôi phục mật khẩu qua email trên trang web này.</p>
+              <p>Hãy <strong>liên hệ trực tiếp với Thầy/Cô giáo hoặc Quản trị viên hệ thống (Admin)</strong> để yêu cầu cấp lại mật khẩu mới.</p>
+              <p>Sau khi nhận mật khẩu mới và đăng nhập, bạn có thể tự thay đổi lại mật khẩu cá nhân bất cứ lúc nào trong phần quản lý hồ sơ.</p>
             </div>
 
-            {tempPassword ? (
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 text-center">
-                <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
-                <h4 className="font-black text-slate-800 text-sm">Gửi Email Mô Phỏng Thành Công!</h4>
-                <p className="text-xs text-slate-500 font-medium mt-1 mb-4 leading-relaxed">
-                  Một mật khẩu tạm thời mới đã được tạo và lưu trữ:
-                </p>
-                <div className="bg-white border-2 border-slate-200 font-black text-xl tracking-widest py-3 rounded-xl text-indigo-600 select-all shadow-inner">
-                  {tempPassword}
-                </div>
-                <p className="text-[10px] text-slate-400 mt-2 font-medium">
-                  Sao chép mật khẩu trên và nhấp chuột bên dưới để quay lại đăng nhập.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    playSound("click");
-                    setShowForgotPassword(false);
-                    setTempPassword(null);
-                    setForgotEmail("");
-                    setActiveTab("login");
-                  }}
-                  className="w-full mt-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all active:scale-[0.98]"
-                >
-                  Quay lại Đăng Nhập
-                </button>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Email tài khoản</label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      required
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      placeholder="vidu@viettyping.edu.vn"
-                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border-2 border-slate-200 hover:border-slate-300 focus:border-sky-400 rounded-xl text-xs font-bold text-slate-700 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {loading ? "Đang xử lý..." : "Khôi phục mật khẩu"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    playSound("click");
-                    setShowForgotPassword(false);
-                    setMessage(null);
-                  }}
-                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-black transition-all cursor-pointer text-center"
-                >
-                  Hủy và Quay lại
-                </button>
-              </>
-            )}
-          </form>
+            <button
+              type="button"
+              onClick={() => {
+                playSound("click");
+                setShowForgotPassword(false);
+                setMessage(null);
+              }}
+              className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              Quay lại Đăng Nhập
+            </button>
+          </div>
         ) : signupSuccess ? (
           /* REGISTRATION SUCCESS VIEW */
           <div className="text-center py-4 space-y-4">
