@@ -75,7 +75,7 @@ export default function CompletionModal({
 
     // Fire confetti
     const fireConfetti = useCallback(() => {
-        const colors = ['#06b6d4', '#6366f1', '#d946ef', '#10b981', '#fbbf24', '#f43f5e'];
+        const colors = ['#0ea5e9', '#6366f1', '#d946ef', '#10b981', '#fbbf24', '#f43f5e'];
 
         // Side cannons
         const duration = 2000;
@@ -160,16 +160,16 @@ export default function CompletionModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-bounce-in text-slate-100">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 backdrop-blur-md">
+            <div className="bg-white border-2 border-slate-200 rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-bounce-in text-slate-800">
 
                 {/* Score Counter */}
                 <div className="text-center mb-6">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                        <IoTrophy className={`text-3xl transition-colors duration-500 ${isCountingDone ? 'text-amber-400' : 'text-slate-500'}`} />
+                        <IoTrophy className={`text-3xl transition-colors duration-500 ${isCountingDone ? 'text-amber-500' : 'text-slate-300'}`} />
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Điểm số</span>
                     </div>
-                    <div className={`text-6xl font-black font-mono tabular-nums transition-all duration-300 ${isCountingDone ? 'text-amber-400 scale-110' : 'text-slate-350'}`}>
+                    <div className={`text-6xl font-black font-mono tabular-nums transition-all duration-300 ${isCountingDone ? 'text-amber-500 scale-110' : 'text-slate-400'}`}>
                         {displayScore.toLocaleString()}
                     </div>
                 </div>
@@ -189,31 +189,31 @@ export default function CompletionModal({
                             {star <= stars ? (
                                 <IoStar className="text-amber-400" />
                             ) : (
-                                <IoStarOutline className="text-slate-700" />
+                                <IoStarOutline className="text-slate-200" />
                             )}
                         </span>
                     ))}
                 </div>
 
                 {/* Message */}
-                <h3 className={`text-xl font-extrabold text-center mb-5 text-slate-200 transition-all duration-500 ${showStars ? 'opacity-100' : 'opacity-0'}`}>
+                <h3 className={`text-xl font-extrabold text-center mb-5 text-slate-700 transition-all duration-500 ${showStars ? 'opacity-100' : 'opacity-0'}`}>
                     {getMessage()}
                 </h3>
 
                 {/* Requirements Warning Box */}
                 {!meetsRequirements && showStars && (
-                    <div className="mb-5 bg-rose-950/20 border border-rose-500/30 rounded-2xl p-4 text-center">
-                        <span className="text-xs font-black text-rose-450 uppercase tracking-widest block mb-2">🔴 CHƯA ĐẠT CHỈ TIÊU CỦA GIÁO VIÊN</span>
+                    <div className="mb-5 bg-rose-50 border-2 border-rose-200 rounded-2xl p-4 text-center">
+                        <span className="text-xs font-black text-rose-600 uppercase tracking-widest block mb-2">🔴 CHƯA ĐẠT CHỈ TIÊU CỦA GIÁO VIÊN</span>
                         <div className="grid grid-cols-2 gap-4 text-xs">
-                            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-rose-500/10">
+                            <div className="bg-white p-2.5 rounded-xl border border-rose-100">
                                 <p className="text-slate-400 font-bold mb-0.5">Tốc độ</p>
-                                <p className={`text-base font-black ${stats.wpm >= minWpm ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    {stats.wpm} / {minWpm} <span className="text-[10px] font-normal text-slate-500">WPM</span>
+                                <p className={`text-base font-black ${stats.wpm >= minWpm ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    {stats.wpm} / {minWpm} <span className="text-[10px] font-normal text-slate-400">WPM</span>
                                 </p>
                             </div>
-                            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-rose-500/10">
+                            <div className="bg-white p-2.5 rounded-xl border border-rose-100">
                                 <p className="text-slate-400 font-bold mb-0.5">Độ chính xác</p>
-                                <p className={`text-base font-black ${stats.accuracy >= minAccuracy ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                <p className={`text-base font-black ${stats.accuracy >= minAccuracy ? 'text-emerald-500' : 'text-rose-500'}`}>
                                     {stats.accuracy}% / {minAccuracy}%
                                 </p>
                             </div>
@@ -226,17 +226,17 @@ export default function CompletionModal({
 
                 {/* Stats */}
                 <div className={`grid grid-cols-3 gap-3 mb-6 transition-all duration-500 ${showStars ? 'opacity-100' : 'opacity-0'}`}>
-                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-center">
-                        <p className="text-xs text-slate-450 mb-1">Tốc độ</p>
-                        <p className="text-lg font-bold text-cyan-400">{stats.wpm}</p>
-                        <p className="text-xs text-slate-500">WPM</p>
+                    <div className="bg-sky-50 border-2 border-sky-100 p-3 rounded-xl text-center">
+                        <p className="text-xs text-slate-400 mb-1">Tốc độ</p>
+                        <p className="text-lg font-bold text-sky-600">{stats.wpm}</p>
+                        <p className="text-xs text-slate-400">WPM</p>
                     </div>
-                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-center">
-                        <p className="text-xs text-slate-450 mb-1">Chính xác</p>
-                        <p className="text-lg font-bold text-indigo-400">{stats.accuracy}%</p>
+                    <div className="bg-indigo-50 border-2 border-indigo-100 p-3 rounded-xl text-center">
+                        <p className="text-xs text-slate-400 mb-1">Chính xác</p>
+                        <p className="text-lg font-bold text-indigo-600">{stats.accuracy}%</p>
                     </div>
-                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-center">
-                        <p className="text-xs text-slate-450 mb-1">Số lỗi</p>
+                    <div className="bg-rose-50 border-2 border-rose-100 p-3 rounded-xl text-center">
+                        <p className="text-xs text-slate-400 mb-1">Số lỗi</p>
                         <p className="text-lg font-bold text-rose-500">{stats.incorrectCount}</p>
                     </div>
                 </div>
@@ -247,14 +247,14 @@ export default function CompletionModal({
                         <>
                             <button
                                 onClick={onRestart}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 border border-slate-750 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 border-2 border-slate-200 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer"
                             >
                                 <IoRefreshOutline className="text-lg shrink-0" />
                                 <span>Làm lại</span>
                             </button>
                             <button
                                 onClick={onContinue}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 rounded-xl font-black transition-colors shadow-lg shadow-cyan-500/10 whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-xl font-black transition-colors shadow-md shadow-sky-500/15 whitespace-nowrap text-sm sm:text-base cursor-pointer"
                             >
                                 <span>{continueLabel}</span>
                                 <IoArrowForward className="text-lg shrink-0" />
@@ -264,13 +264,13 @@ export default function CompletionModal({
                         <>
                             <button
                                 onClick={() => window.location.href = '/typing'}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-850 text-slate-400 rounded-xl font-bold hover:bg-slate-800 border border-slate-800 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-100 text-slate-500 rounded-xl font-bold hover:bg-slate-200 border-2 border-slate-200 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer"
                             >
                                 <span>Thoát</span>
                             </button>
                             <button
                                 onClick={onRestart}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-rose-500 to-red-600 text-slate-950 rounded-xl font-black transition-colors shadow-lg shadow-rose-500/10 whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl font-black transition-colors shadow-md shadow-rose-500/15 whitespace-nowrap text-sm sm:text-base cursor-pointer"
                             >
                                 <IoRefreshOutline className="text-lg shrink-0" />
                                 <span>Gõ lại</span>

@@ -41,7 +41,6 @@ export default function StudentConfigModal() {
       setGrade(studentInfo.grade || "Lớp 6");
       setAvatar(studentInfo.avatar || "🤖");
     } else {
-      // Mặc định cho học sinh mới
       setNickname("");
       setName("");
       setGrade("Lớp 6");
@@ -119,7 +118,7 @@ export default function StudentConfigModal() {
               setIsOpenConfig(false);
             }
           }}
-          className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+          className="absolute inset-0 bg-slate-900/30 backdrop-blur-md"
         />
 
         {/* Modal Box */}
@@ -128,7 +127,7 @@ export default function StudentConfigModal() {
           animate={{ scale: 1, y: 0, opacity: 1 }}
           exit={{ scale: 0.9, y: 20, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 350 }}
-          className="relative w-full max-w-lg max-h-[90vh] bg-slate-900 border-2 border-slate-800 rounded-[32px] shadow-[8px_8px_0px_0px_#020617] overflow-hidden z-10 flex flex-col text-slate-100"
+          className="relative w-full max-w-lg max-h-[90vh] bg-white border-2 border-slate-200 rounded-[32px] shadow-2xl overflow-hidden z-10 flex flex-col text-slate-800"
         >
           {/* Nút Đóng (chỉ hiện khi đã cấu hình xong) */}
           {canClose && (
@@ -137,21 +136,21 @@ export default function StudentConfigModal() {
                 playSound("click");
                 setIsOpenConfig(false);
               }}
-              className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-rose-900 text-slate-350 hover:text-rose-200 border border-slate-700 rounded-full shadow-md active:translate-y-[1px] transition-all cursor-pointer z-20"
+              className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-500 border-2 border-slate-200 hover:border-rose-200 rounded-full shadow-sm active:translate-y-[1px] transition-all cursor-pointer z-20"
             >
               <X className="w-5 h-5" />
             </button>
           )}
 
           {/* Dải màu trang trí phía trên */}
-          <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 z-20" />
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 z-20" />
 
           {/* Vùng nội dung cuộn */}
           <div className="overflow-y-auto p-6 md:p-8 pt-10 md:pt-10 w-full flex-1 custom-scrollbar">
             {/* Tiêu đề */}
             <div className="text-center mt-2 mb-6">
               <span className="text-5xl inline-block animate-bounce mb-2">⚡</span>
-              <h2 className="text-3xl font-black text-cyan-400 tracking-wide flex items-center justify-center gap-2">
+              <h2 className="text-3xl font-black text-sky-600 tracking-wide flex items-center justify-center gap-2">
                 <span>Hồ Sơ Cá Nhân</span>
                 <Sparkles className="w-6 h-6 text-amber-500 fill-amber-300 animate-pulse" />
               </h2>
@@ -163,11 +162,11 @@ export default function StudentConfigModal() {
             <form onSubmit={handleSave} className="space-y-5">
               {/* Lựa chọn Avatar Emoji */}
               <div>
-                <label className="block text-slate-300 font-extrabold text-base mb-2.5 flex items-center gap-1.5">
-                  <Heart className="w-4 h-4 text-cyan-400 fill-cyan-400/20" />
+                <label className="block text-slate-600 font-extrabold text-base mb-2.5 flex items-center gap-1.5">
+                  <Heart className="w-4 h-4 text-sky-500 fill-sky-400/20" />
                   <span>1. Chọn ảnh đại diện của bạn:</span>
                 </label>
-                <div className="grid grid-cols-5 gap-2.5 p-3 bg-slate-950 border border-slate-800 rounded-2xl shadow-inner">
+                <div className="grid grid-cols-5 gap-2.5 p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl">
                   {AVATARS.map((item) => (
                     <button
                       key={item.emoji}
@@ -175,12 +174,12 @@ export default function StudentConfigModal() {
                       onClick={() => handleSelectAvatar(item.emoji)}
                       className={`text-3xl p-2 rounded-xl transition-all relative border-2 cursor-pointer ${
                         avatar === item.emoji
-                          ? "bg-slate-800 border-cyan-400 scale-110 shadow-sm"
-                          : "bg-slate-900 border-transparent hover:bg-slate-800/50 hover:scale-105"
+                          ? "bg-sky-50 border-sky-400 scale-110 shadow-sm"
+                          : "bg-white border-transparent hover:bg-slate-100 hover:scale-105"
                       }`}
                     >
                       {avatar === item.emoji && (
-                        <span className="absolute -top-1.5 -right-1.5 text-xs bg-cyan-400 text-slate-950 rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                        <span className="absolute -top-1.5 -right-1.5 text-xs bg-sky-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
                           ✓
                         </span>
                       )}
@@ -192,8 +191,8 @@ export default function StudentConfigModal() {
 
               {/* Biệt danh / Tên ở nhà */}
               <div>
-                <label className="block text-slate-300 font-extrabold text-base mb-2 flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-cyan-400" />
+                <label className="block text-slate-600 font-extrabold text-base mb-2 flex items-center gap-1.5">
+                  <User className="w-4 h-4 text-sky-500" />
                   <span>2. Biệt danh / Tên hiển thị:</span>
                 </label>
                 <input
@@ -202,14 +201,14 @@ export default function StudentConfigModal() {
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   maxLength={15}
-                  className="w-full px-5 py-3.5 bg-slate-950 border border-slate-800 rounded-2xl text-lg font-black text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all shadow-inner"
+                  className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-lg font-black text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400 transition-all"
                 />
               </div>
 
               {/* Tên đầy đủ trên lớp */}
               <div>
-                <label className="block text-slate-300 font-extrabold text-base mb-2 flex items-center gap-1.5">
-                  <GraduationCap className="w-4 h-4 text-indigo-400" />
+                <label className="block text-slate-600 font-extrabold text-base mb-2 flex items-center gap-1.5">
+                  <GraduationCap className="w-4 h-4 text-indigo-500" />
                   <span>3. Họ và tên học sinh (tùy chọn):</span>
                 </label>
                 <input
@@ -218,14 +217,14 @@ export default function StudentConfigModal() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   maxLength={30}
-                  className="w-full px-5 py-3.5 bg-slate-950 border border-slate-800 rounded-2xl text-lg font-bold text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-inner"
+                  className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-lg font-bold text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-all"
                 />
               </div>
 
               {/* Bé học lớp mấy */}
               <div>
-                <label className="block text-slate-300 font-extrabold text-base mb-2 flex items-center gap-1.5">
-                  <GraduationCap className="w-4 h-4 text-cyan-400" />
+                <label className="block text-slate-600 font-extrabold text-base mb-2 flex items-center gap-1.5">
+                  <GraduationCap className="w-4 h-4 text-sky-500" />
                   <span>4. Bạn đang học lớp mấy?</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -234,10 +233,10 @@ export default function StudentConfigModal() {
                       key={g}
                       type="button"
                       onClick={() => handleSelectGrade(g)}
-                      className={`flex-1 min-w-[70px] py-2.5 rounded-xl text-sm font-black border transition-all cursor-pointer ${
+                      className={`flex-1 min-w-[70px] py-2.5 rounded-xl text-sm font-black border-2 transition-all cursor-pointer ${
                         grade === g
-                          ? "bg-cyan-500 text-slate-950 border-cyan-400 shadow-md"
-                          : "bg-slate-900 hover:bg-slate-850 text-slate-300 border-slate-800 shadow-sm active:translate-y-[1px]"
+                          ? "bg-sky-500 text-white border-sky-400 shadow-md"
+                          : "bg-white hover:bg-slate-100 text-slate-500 border-slate-200 shadow-sm active:translate-y-[1px]"
                       }`}
                     >
                       {g}
@@ -251,7 +250,7 @@ export default function StudentConfigModal() {
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-sm font-bold text-rose-400 bg-rose-950/30 border border-rose-900 px-4 py-2.5 rounded-xl"
+                  className="text-sm font-bold text-rose-600 bg-rose-50 border-2 border-rose-200 px-4 py-2.5 rounded-xl"
                 >
                   ⚠️ {error}
                 </motion.div>
@@ -261,7 +260,7 @@ export default function StudentConfigModal() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 text-slate-950 hover:text-slate-900 font-black text-xl rounded-2xl shadow-lg hover:shadow-cyan-500/20 active:translate-y-[2px] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-black text-xl rounded-2xl shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 active:translate-y-[2px] transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <span>Bắt Đầu Luyện Tập! 🚀</span>
                 </button>

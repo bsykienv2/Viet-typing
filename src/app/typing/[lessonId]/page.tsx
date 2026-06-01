@@ -135,12 +135,11 @@ export default function LessonPage({ params }: Props) {
   }, [getNextLesson, router]);
 
   return (
-    <main className={`min-h-screen bg-[#0B0F19] text-slate-100 relative overflow-hidden py-6 ${beVietnamPro.className}`}>
-      {/* Cyber Grid Background */}
+    <main className={`min-h-screen bg-slate-50 text-slate-800 relative overflow-hidden py-6 ${beVietnamPro.className}`}>
+      {/* Light decorative background */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-35" />
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-sky-100/50 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-100/50 blur-[120px]" />
       </div>
 
       <div className="w-full px-6 md:px-12 relative z-10">
@@ -148,21 +147,21 @@ export default function LessonPage({ params }: Props) {
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/typing')}
-              className="flex items-center gap-2 px-5 py-3 bg-slate-900 text-slate-300 hover:text-slate-100 rounded-xl font-bold border border-slate-800 transition-all hover:bg-slate-800 shadow-md cursor-pointer"
+              className="flex items-center gap-2 px-5 py-3 bg-white text-slate-600 hover:text-slate-800 rounded-xl font-bold border-2 border-slate-200 transition-all hover:bg-slate-100 shadow-sm cursor-pointer"
             >
               <IoArrowBack className="text-xl" />
               <span>Danh sách bài học</span>
             </button>
           </div>
           
-          <h1 className={`text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 text-center ${beVietnamPro.className}`}>
+          <h1 className={`text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 text-center ${beVietnamPro.className}`}>
             {lesson.title}
           </h1>
 
           {getNextLesson() ? (
             <button
               onClick={handleNextLesson}
-              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 hover:brightness-110 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/10 cursor-pointer"
+              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:brightness-110 rounded-xl font-bold transition-all shadow-md shadow-emerald-500/15 cursor-pointer"
             >
               <span>Bài tiếp theo</span>
               <IoArrowForward className="text-xl" />
@@ -172,7 +171,7 @@ export default function LessonPage({ params }: Props) {
           )}
         </div>
 
-        <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 border border-slate-800 shadow-2xl mb-8">
+        <div className="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-md mb-8">
           <TypingPractice
             key={`${lesson.id}-${resetKey}`}
             task={lesson as unknown as TypingTask}

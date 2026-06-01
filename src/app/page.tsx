@@ -1,378 +1,409 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { lessons, Lesson } from '@/data/lessons';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import Link from 'next/link';
-import { useSound } from '@/contexts/SoundContext';
 import { Be_Vietnam_Pro } from 'next/font/google';
-import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, Check, BookOpen, Keyboard } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Keyboard, Users, BarChart3, Shield, ChevronRight, Zap, Target, Award, BookOpen, GraduationCap, Star } from 'lucide-react';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
   weight: ['400', '500', '600', '700', '800', '900']
 });
 
-const levelNames: Record<string, { name: string; description: string; color: string; icon: string; bgClass: string; borderClass: string; accentColor: string }> = {
-  basic: {
-    name: 'Cấp Độ Sơ Cấp ⚡',
-    description: 'Làm quen các hàng phím cơ bản và quy tắc gõ dấu tiếng Việt',
-    color: 'from-cyan-400 to-blue-500',
-    icon: '⚡',
-    bgClass: 'bg-slate-900/60 backdrop-blur-md',
-    borderClass: 'border-slate-800/80',
-    accentColor: '#06b6d4',
-  },
-  intermediate: {
-    name: 'Cấp Độ Trung Cấp 🚀',
-    description: 'Thực hành gõ các từ ghép và câu văn ngắn tiếng Việt',
-    color: 'from-indigo-400 to-purple-500',
-    icon: '🚀',
-    bgClass: 'bg-slate-900/60 backdrop-blur-md',
-    borderClass: 'border-slate-800/80',
-    accentColor: '#6366f1',
-  },
-  advanced: {
-    name: 'Cấp Độ Cao Cấp 🔥',
-    description: 'Chinh phục đoạn văn dài để rèn luyện tốc độ tối đa và độ chuẩn xác',
-    color: 'from-fuchsia-400 to-pink-500',
-    icon: '🔥',
-    bgClass: 'bg-slate-900/60 backdrop-blur-md',
-    borderClass: 'border-slate-800/80',
-    accentColor: '#d946ef',
-  }
-};
-
-export default function TypingPage() {
-  const router = useRouter();
-  const { playSound } = useSound();
-  
-  // States cho gamification
-  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
-  const [xp, setXp] = useState<number>(0);
-  const [streak, setStreak] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<'basic' | 'intermediate' | 'advanced'>('basic');
-  const [hoveredLessonId, setHoveredLessonId] = useState<string | null>(null);
-
-  // Đọc dữ liệu từ localStorage sau khi component mount
-  useEffect(() => {
-    try {
-      const completed = JSON.parse(localStorage.getItem('typing_completed_lessons') || '[]');
-      const savedXp = parseInt(localStorage.getItem('typing_xp') || '0', 10);
-      const savedStreak = parseInt(localStorage.getItem('typing_streak') || '0', 10);
-      
-      setCompletedLessons(completed);
-      setXp(savedXp);
-      setStreak(savedStreak);
-    } catch (e) {
-      console.error('Failed to load typing progress:', e);
-    }
-  }, []);
-
-  const getLessonsForLevel = (level: string) => {
-    return lessons.filter(lesson => lesson.level === level);
-  };
-
-  const handleResetProgress = () => {
-    if (confirm('Bạn có muốn thiết lập lại toàn bộ tiến trình luyện tập của mình không? Mọi lịch sử và điểm số sẽ bị xóa.')) {
-      try {
-        localStorage.removeItem('typing_completed_lessons');
-        localStorage.setItem('typing_xp', '0');
-        localStorage.setItem('typing_streak', '0');
-        
-        setCompletedLessons([]);
-        setXp(0);
-        setStreak(0);
-        playSound('tada');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  };
-
-  // Xác định bài học tiếp theo (bài đầu tiên chưa hoàn thành)
-  const getNextLessonId = () => {
-    const allLevels = ['basic', 'intermediate', 'advanced'];
-    for (const lvl of allLevels) {
-      const lvlLessons = getLessonsForLevel(lvl);
-      for (const les of lvlLessons) {
-        if (!completedLessons.includes(les.id)) {
-          return les.id;
-        }
-      }
-    }
-    return lessons[0]?.id; // Mặc định là bài đầu tiên
-  };
-
-  const nextLessonId = getNextLessonId();
-
-  // Tính phần trăm tiến trình tổng thể
-  const totalLessonsCount = lessons.length;
-  const completedCount = completedLessons.length;
-  const progressPercent = totalLessonsCount > 0 ? Math.round((completedCount / totalLessonsCount) * 100) : 0;
-
-  const handleLessonClick = (lesson: Lesson) => {
-    playSound('click');
-    router.push(`/typing/${lesson.id}`);
-  };
-
+export default function HomePage() {
   return (
-    <main className={`min-h-screen bg-[#0B0F19] text-slate-100 relative overflow-hidden pb-16 ${beVietnamPro.className}`}>
-      
-      {/* Cyber Grid Background */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-35" />
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px]" />
-      </div>
+    <main className={`min-h-screen bg-slate-50 text-slate-800 ${beVietnamPro.className}`}>
 
-      <div className="max-w-6xl mx-auto px-6 py-8 relative z-10">
-        
-        {/* Header Navigation */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <Link
-              href="/"
-              onClick={() => playSound('click')}
-              className="flex items-center gap-2 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-slate-100 rounded-xl font-bold border border-slate-800 transition-all shadow-md"
-            >
-              <BookOpen className="w-5 h-5 text-indigo-400" />
-              <span>📚 Học các môn</span>
-            </Link>
-            <button
-              disabled
-              className="flex items-center gap-2 px-5 py-3 bg-slate-850 text-cyan-400 rounded-xl font-bold border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)] cursor-default"
-            >
+      {/* ===== NAVIGATION BAR ===== */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="bg-gradient-to-br from-sky-500 to-indigo-600 p-2 rounded-xl text-white shadow-md shadow-sky-500/20">
               <Keyboard className="w-5 h-5" />
-              <span>⌨️ Luyện gõ phím</span>
-            </button>
+            </div>
+            <div>
+              <span className="font-black text-lg tracking-wider text-slate-800">VIETTYPING</span>
+              <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest -mt-0.5">Luyện Gõ Tiếng Việt</span>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/typing"
+              className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-sky-600 transition-colors"
+            >
+              Bài Học
+            </Link>
             <Link
               href="/admin"
-              onClick={() => playSound('click')}
-              className="flex items-center gap-2 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-amber-400 hover:text-amber-300 rounded-xl font-bold border border-slate-800 transition-all shadow-md sm:ml-auto"
+              className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-sky-600 transition-colors"
             >
-              🔑 Quản trị & Giáo viên
+              Giáo Viên
+            </Link>
+            <Link
+              href="/typing"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-sm font-bold rounded-xl shadow-md shadow-sky-500/20 hover:shadow-lg hover:shadow-sky-500/30 transition-all active:scale-95"
+            >
+              Bắt đầu luyện tập
+              <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
-
-          <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 tracking-wider">
-            ⌨️ HỆ THỐNG LUYỆN GÕ PHÍM
-          </h1>
         </div>
+      </nav>
 
-        {/* Dashboard Thành Tích */}
-        <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 mb-8 border border-slate-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 w-full md:w-auto">
-            
-            {/* Card XP */}
-            <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 px-5 py-3 rounded-xl shadow-inner min-w-[140px]">
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
-                className="text-3xl"
-              >
-                🏆
-              </motion.div>
-              <div>
-                <div className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Tích lũy</div>
-                <div className="text-2xl font-black text-amber-400">{xp} XP</div>
+      {/* ===== HERO SECTION ===== */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-sky-50/50 to-slate-50 py-20 lg:py-28">
+        {/* Decorative blobs */}
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-sky-100/60 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-100/60 blur-[100px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left - Text */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-sky-100 border border-sky-200 text-sky-700 text-xs font-bold rounded-full mb-6 uppercase tracking-wider">
+                <Star className="w-3.5 h-3.5 fill-sky-500 text-sky-500" />
+                Dành cho học sinh THCS (Lớp 6-9)
               </div>
-            </div>
 
-            {/* Card Streak */}
-            <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 px-5 py-3 rounded-xl shadow-inner min-w-[140px]">
-              <motion.div
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
-                className="text-3xl"
-              >
-                🔥
-              </motion.div>
-              <div>
-                <div className="text-[10px] text-orange-500 font-bold uppercase tracking-wider">Chuỗi ngày</div>
-                <div className="text-2xl font-black text-orange-400">{streak} ngày</div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-800 leading-tight mb-6">
+                Luyện Gõ Phím
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500">
+                  Tiếng Việt
+                </span>
+                <br />
+                Chuyên Nghiệp
+              </h1>
+
+              <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-lg">
+                Hệ thống 60 bài học từ cơ bản đến nâng cao, hỗ trợ gõ <strong className="text-slate-700">Telex</strong> & <strong className="text-slate-700">VNI</strong>, giúp học sinh THCS rèn luyện kỹ năng gõ phím 10 ngón chuẩn quốc tế.
+              </p>
+
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/typing"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-base font-bold rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/35 transition-all active:scale-[0.97] border-2 border-sky-400/30"
+                >
+                  <Keyboard className="w-5 h-5" />
+                  Bắt đầu luyện tập miễn phí
+                </Link>
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-700 text-base font-bold rounded-2xl shadow-md border-2 border-slate-200 hover:border-sky-300 hover:text-sky-600 transition-all active:scale-[0.97]"
+                >
+                  <GraduationCap className="w-5 h-5" />
+                  Dành cho Giáo viên
+                </Link>
               </div>
-            </div>
 
-            {/* Card Progress */}
-            <div className="flex flex-col bg-slate-950 border border-slate-800 px-5 py-3 rounded-xl shadow-inner min-w-[220px]">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">Tiến trình học</span>
-                <span className="text-sm font-black text-cyan-400">{completedCount}/{totalLessonsCount} bài</span>
+              {/* Quick stats */}
+              <div className="flex flex-wrap gap-6 mt-10 pt-6 border-t border-slate-200">
+                <div>
+                  <div className="text-2xl font-black text-sky-600">60+</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Bài học</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-indigo-600">3</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cấp độ</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-emerald-600">100%</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Miễn phí</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-amber-600">2</div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Kiểu gõ (Telex & VNI)</div>
+                </div>
               </div>
-              <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-700">
-                <motion.div 
-                  className="bg-gradient-to-r from-cyan-400 to-indigo-500 h-full rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 1, ease: 'easeOut' }}
-                />
-              </div>
-            </div>
-          </div>
+            </motion.div>
 
-          <button
-            onClick={handleResetProgress}
-            className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-slate-400 bg-slate-800 hover:bg-rose-950/40 hover:text-rose-400 rounded-xl transition-all border border-slate-700 cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Thiết lập lại tiến trình
-          </button>
-        </div>
+            {/* Right - Visual illustration */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="hidden lg:flex items-center justify-center"
+            >
+              <div className="relative w-full max-w-md">
+                {/* Keyboard illustration card */}
+                <div className="bg-white rounded-3xl shadow-2xl border-2 border-slate-200 p-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-400 via-indigo-500 to-purple-500" />
 
-        {/* Tab Selector */}
-        <div className="grid grid-cols-3 gap-3 mb-8 max-w-2xl mx-auto bg-slate-950/60 backdrop-blur-sm p-2 rounded-2xl border border-slate-800">
-          {(['basic', 'intermediate', 'advanced'] as const).map((tab) => {
-            const isSelected = activeTab === tab;
-            const tabInfo = levelNames[tab];
-            
-            return (
-              <button
-                key={tab}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab(tab);
-                }}
-                className={`relative px-4 py-3.5 rounded-xl font-black text-sm md:text-base flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                  isSelected 
-                    ? `bg-gradient-to-r ${tabInfo.color} text-slate-950 font-black shadow-lg scale-102` 
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
-                }`}
-              >
-                <span className="text-xl md:text-2xl">{tabInfo.icon}</span>
-                <span className={beVietnamPro.className}>{tab === 'basic' ? 'Sơ Cấp' : tab === 'intermediate' ? 'Trung Cấp' : 'Cao Cấp'}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Cấp độ đang chọn */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25 }}
-            className="rounded-3xl p-6 md:p-8 border border-slate-800 bg-slate-900/40 backdrop-blur-md shadow-2xl relative"
-          >
-            {/* Glow effect on active level panel */}
-            <div className={`absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r ${levelNames[activeTab].color} opacity-40`} />
-
-            {/* Banner level */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 text-center sm:text-left border-b border-slate-800 pb-6">
-              <span className="text-5xl md:text-6xl p-4 bg-slate-950 rounded-2xl shadow-inner border border-slate-800">
-                {levelNames[activeTab].icon}
-              </span>
-              <div>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-slate-100">
-                  {levelNames[activeTab].name}
-                </h2>
-                <p className="text-slate-400 text-sm md:text-base mt-1 font-medium">
-                  {levelNames[activeTab].description}
-                </p>
-              </div>
-            </div>
-
-            {/* Grid bài học */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {getLessonsForLevel(activeTab).map((lesson, index) => {
-                const isCompleted = completedLessons.includes(lesson.id);
-                const isNext = lesson.id === nextLessonId;
-                const isLocked = !isCompleted && !isNext && completedLessons.length < lessons.findIndex(l => l.id === lesson.id);
-
-                let btnBgClass = 'bg-slate-950 border-slate-900 text-slate-700 cursor-not-allowed opacity-40';
-                
-                if (isCompleted) {
-                  btnBgClass = 'bg-gradient-to-br from-emerald-500 to-teal-600 text-slate-950 border-emerald-400 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 active:translate-y-[2px]';
-                } else if (isNext) {
-                  btnBgClass = 'bg-gradient-to-br from-cyan-400 to-blue-500 text-slate-950 border-cyan-300 shadow-lg shadow-cyan-400/20 active:translate-y-[2px] ring-2 ring-cyan-400/60 ring-offset-2 ring-offset-slate-900 animate-pulse';
-                } else if (!isLocked) {
-                  btnBgClass = 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-slate-100 active:translate-y-[2px]';
-                }
-
-                return (
-                  <div key={lesson.id} className="relative flex flex-col items-center">
-                    {/* Nút bài học 3D */}
-                    <button
-                      onClick={() => !isLocked && handleLessonClick(lesson)}
-                      onMouseEnter={() => {
-                        setHoveredLessonId(lesson.id);
-                        if (!isLocked) playSound('click');
-                      }}
-                      onMouseLeave={() => setHoveredLessonId(null)}
-                      disabled={isLocked}
-                      className={`w-20 h-20 rounded-2xl border flex items-center justify-center text-3xl font-black font-sans transition-all relative z-10 ${btnBgClass} ${
-                        !isLocked ? 'cursor-pointer' : ''
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <div className="relative">
-                          <span>{index + 1}</span>
-                          <span className="absolute -bottom-1.5 -right-1.5 bg-slate-950 text-emerald-400 rounded-full p-0.5 border border-emerald-400 text-[10px] shadow-sm">
-                            <Check className="w-3 h-3 stroke-[4px]" />
-                          </span>
-                        </div>
-                      ) : (
-                        <span>{index + 1}</span>
-                      )}
-                    </button>
-
-                    {/* Tiêu đề ngắn gọn */}
-                    <span className="text-xs font-bold text-slate-400 mt-3 text-center line-clamp-1 max-w-[110px]">
-                      {lesson.title.replace('Luyện gõ ', '')}
-                    </span>
-
-                    {/* Tooltip thông tin */}
-                    <AnimatePresence>
-                      {hoveredLessonId === lesson.id && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute bottom-full mb-3 z-50 bg-slate-950 text-slate-100 p-3.5 rounded-xl shadow-2xl w-48 text-center text-xs pointer-events-none border border-slate-800"
-                        >
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1.5 border-4 border-transparent border-t-slate-950" />
-                          <h4 className="font-extrabold text-cyan-400 text-sm mb-1">{lesson.title}</h4>
-                          <p className="text-slate-400 mb-2">{lesson.description}</p>
-                          <div className="flex justify-around bg-slate-900 p-2 rounded-lg border border-slate-800">
-                            <div>
-                              <div className="text-slate-500 font-bold font-sans">Mục tiêu</div>
-                              <div className="font-bold text-emerald-400">🎯 {lesson.targetWPM} WPM</div>
-                            </div>
-                            <div className="w-[1px] bg-slate-800" />
-                            <div>
-                              <div className="text-slate-500 font-bold font-sans">Độ chuẩn</div>
-                              <div className="font-bold text-sky-400">⭐ {lesson.minAccuracy}%</div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                  <div className="text-center mb-6">
+                    <span className="text-6xl">⌨️</span>
+                    <h3 className="text-xl font-black text-slate-800 mt-3">Giao diện luyện gõ</h3>
+                    <p className="text-sm text-slate-400 font-medium mt-1">Bàn phím ảo hướng dẫn trực quan</p>
                   </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        </AnimatePresence>
 
-        {/* Hướng dẫn Đặt Ngón Tay */}
-        <div className="bg-slate-900/60 backdrop-blur-md rounded-2xl p-6 mt-8 border border-slate-800 shadow-xl flex flex-col md:flex-row items-center gap-6">
-          <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl text-3xl shrink-0">
-            💡
+                  {/* Fake keyboard rows */}
+                  <div className="space-y-2">
+                    <div className="flex gap-1.5 justify-center">
+                      {['Q','W','E','R','T','Y','U','I','O','P'].map(k => (
+                        <div key={k} className="w-9 h-9 bg-slate-100 border-2 border-slate-200 rounded-lg flex items-center justify-center text-xs font-bold text-slate-500 shadow-sm">
+                          {k}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-1.5 justify-center ml-3">
+                      {['A','S','D','F','G','H','J','K','L'].map(k => (
+                        <div key={k} className={`w-9 h-9 border-2 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm ${
+                          k === 'F' || k === 'J'
+                            ? 'bg-sky-100 border-sky-300 text-sky-600'
+                            : 'bg-slate-100 border-slate-200 text-slate-500'
+                        }`}>
+                          {k}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-1.5 justify-center ml-6">
+                      {['Z','X','C','V','B','N','M'].map(k => (
+                        <div key={k} className="w-9 h-9 bg-slate-100 border-2 border-slate-200 rounded-lg flex items-center justify-center text-xs font-bold text-slate-500 shadow-sm">
+                          {k}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Floating badges */}
+                  <motion.div
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                    className="absolute -top-4 -right-4 bg-emerald-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg"
+                  >
+                    95% chính xác ✓
+                  </motion.div>
+                  <motion.div
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut', delay: 0.5 }}
+                    className="absolute -bottom-3 -left-3 bg-amber-500 text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg"
+                  >
+                    🏆 45 WPM
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-cyan-400">
-              Bí quyết luyện gõ phím chuyên nghiệp
-            </h3>
-            <p className="text-slate-400 text-sm md:text-base mt-1 leading-relaxed">
-              Hãy luôn đặt hai ngón tay trỏ lên các phím định vị có gờ nổi là <span className="font-bold text-cyan-400 bg-slate-950 px-1.5 py-0.5 rounded-md border border-slate-800">F</span> và <span className="font-bold text-cyan-400 bg-slate-950 px-1.5 py-0.5 rounded-md border border-slate-800">J</span>. Giữ lưng thẳng, mắt nhìn màn hình và dùng ngón cái để nhấn phím Cách (Spacebar). Không nhìn xuống bàn phím khi gõ!
+        </div>
+      </section>
+
+      {/* ===== FEATURES SECTION ===== */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">
+              Tại sao chọn VietTyping?
+            </h2>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+              Được thiết kế riêng cho học sinh Trung học cơ sở Việt Nam với lộ trình bài bản và công cụ quản trị cho Giáo viên
             </p>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0 }}
+              className="bg-sky-50/60 border-2 border-sky-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+            >
+              <div className="bg-sky-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-sky-500/20">
+                <Zap className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">60 bài học có lộ trình</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Từ Sơ cấp (làm quen hàng phím) → Trung cấp (từ ghép, câu ngắn) → Cao cấp (đoạn văn dài). Tất cả nội dung đều bằng tiếng Việt có dấu.
+              </p>
+            </motion.div>
+
+            {/* Feature 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-indigo-50/60 border-2 border-indigo-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+            >
+              <div className="bg-indigo-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-indigo-500/20">
+                <Keyboard className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Hỗ trợ Telex & VNI</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Học sinh tự do chọn kiểu gõ dấu tiếng Việt phù hợp. Giáo viên có thể bắt buộc lớp học chỉ dùng một kiểu gõ duy nhất.
+              </p>
+            </motion.div>
+
+            {/* Feature 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-emerald-50/60 border-2 border-emerald-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+            >
+              <div className="bg-emerald-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-emerald-500/20">
+                <Target className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Bàn phím ảo trực quan</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Bàn phím ảo hướng dẫn ngón tay đặt đúng vị trí, highlight phím cần gõ tiếp theo, phản hồi âm thanh đúng/sai tức thì.
+              </p>
+            </motion.div>
+
+            {/* Feature 4 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="bg-amber-50/60 border-2 border-amber-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+            >
+              <div className="bg-amber-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-amber-500/20">
+                <Award className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Hệ thống XP & Streak</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Tích lũy điểm XP, duy trì chuỗi ngày luyện tập, nhận sao đánh giá 3 mức. Gamification giúp học sinh luôn có động lực.
+              </p>
+            </motion.div>
+
+            {/* Feature 5 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="bg-rose-50/60 border-2 border-rose-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+            >
+              <div className="bg-rose-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-rose-500/20">
+                <Users className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Quản trị Giáo viên</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Giáo viên tạo lớp học, chia sẻ mã tham gia, giám sát tiến độ học sinh realtime, thiết lập ngưỡng chấm đạt WPM & độ chính xác.
+              </p>
+            </motion.div>
+
+            {/* Feature 6 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="bg-purple-50/60 border-2 border-purple-100 rounded-3xl p-7 hover:-translate-y-1 hover:shadow-lg transition-all"
+            >
+              <div className="bg-purple-500 text-white p-3 rounded-2xl w-fit mb-5 shadow-md shadow-purple-500/20">
+                <BarChart3 className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Thống kê chi tiết</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Theo dõi tốc độ gõ (WPM), độ chính xác, số bài hoàn thành. Dashboard tổng quan với biểu đồ phân bổ kiểu gõ Telex/VNI.
+              </p>
+            </motion.div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* ===== HOW IT WORKS SECTION ===== */}
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">
+              Cách hoạt động
+            </h2>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+              Chỉ cần 3 bước đơn giản để bắt đầu luyện gõ phím tiếng Việt
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-sky-500 text-white text-2xl font-black rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-sky-500/20 border-2 border-sky-400/50">
+                01
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Chọn cấp độ</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Bắt đầu từ <strong>Sơ cấp</strong> nếu bạn mới học gõ phím, hoặc nhảy thẳng đến <strong>Trung cấp / Cao cấp</strong> để thử thách bản thân.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-indigo-500 text-white text-2xl font-black rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-500/20 border-2 border-indigo-400/50">
+                02
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Luyện gõ tiếng Việt</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Gõ theo bàn phím ảo hướng dẫn, sử dụng kiểu gõ <strong>Telex</strong> hoặc <strong>VNI</strong> để tạo dấu tiếng Việt trên cùng giao diện.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-emerald-500 text-white text-2xl font-black rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 border-2 border-emerald-400/50">
+                03
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-800 mb-2">Nhận kết quả & tiến bộ</h3>
+              <p className="text-slate-500 leading-relaxed">
+                Xem tốc độ WPM, độ chính xác, tích lũy XP và nhận sao đánh giá. Giáo viên giám sát trực tiếp tiến độ của cả lớp.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CTA SECTION ===== */}
+      <section className="py-20 bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem] pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-6">
+            Sẵn sàng trở thành "Cao thủ Gõ Phím"? 🚀
+          </h2>
+          <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
+            Hơn 60 bài học tiếng Việt, hệ thống gamification, bàn phím ảo trực quan — tất cả đều miễn phí. Bắt đầu ngay hôm nay!
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link
+              href="/typing"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-sky-700 text-base font-black rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-[0.97]"
+            >
+              <Keyboard className="w-5 h-5" />
+              Bắt đầu luyện tập ngay
+            </Link>
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 text-white text-base font-bold rounded-2xl border-2 border-white/30 hover:bg-white/25 transition-all active:scale-[0.97]"
+            >
+              <Shield className="w-5 h-5" />
+              Đăng nhập Giáo viên
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FOOTER ===== */}
+      <footer className="py-10 bg-slate-800 text-slate-400">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="bg-gradient-to-br from-sky-500 to-indigo-600 p-1.5 rounded-lg text-white">
+              <Keyboard className="w-4 h-4" />
+            </div>
+            <span className="font-bold text-slate-300">VietTyping</span>
+            <span className="text-xs text-slate-500">— Luyện gõ tiếng Việt cho học sinh THCS</span>
+          </div>
+          <div className="text-sm text-slate-500">
+            © 2025 VietTyping. Dự án giáo dục phi lợi nhuận.
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
