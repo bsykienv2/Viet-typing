@@ -1,195 +1,343 @@
-# Hướng Dẫn Tích Hợp Xác Thực Google OAuth 2.0 & Cấu Hình Email Resend
+# Hướng Dẫn Thiết Lập Supabase Auth & Google OAuth 2.0 (Không sử dụng Resend)
 
-Tài liệu này giải đáp chi tiết các câu hỏi của bạn về việc tích hợp **Google OAuth 2.0 thật** (gọi các tài khoản đã đăng nhập trên trình duyệt), cách thiết lập **Resend Email**, và tính hợp lệ của tên miền **`https://viet-typing.vercel.app`**.
+Tài liệu này hướng dẫn chi tiết các bước thiết lập hệ thống xác thực người dùng trên **Supabase** kết hợp với **Google OAuth 2.0** cho ứng dụng VietTyping. 
 
----
-
-## 1. TÊN MIỀN `viet-typing.vercel.app` CÓ HỢP LỆ ĐỂ CẤU HÌNH RESEND KHÔNG?
-
-> [!WARNING]
-> **Câu trả lời là: KHÔNG HỢP LỆ để cấu hình Tên miền gửi Email (Sending Domains) chính thức.**
-
-### Lý do:
-Để gửi email bằng tên miền riêng (ví dụ: `admin@viettyping.edu.vn`), các nhà cung cấp dịch vụ email như **Resend**, **SendGrid**, hay **Mailgun** yêu cầu bạn phải **xác minh quyền sở hữu tên miền** bằng cách cấu hình các bản ghi DNS sau trong trang quản trị tên miền của bạn:
-*   **Bản ghi TXT (SPF & DKIM):** Để xác thực Resend được phép gửi thư thay mặt tên miền của bạn (tránh rơi vào hộp thư rác/Spam).
-*   **Bản ghi MX:** Để xử lý luồng nhận thư hoặc xác minh.
-*   **Bản ghi CNAME:** Để theo dõi lượt mở, nhấp vào liên kết (nếu cần).
-
-Vì `vercel.app` là tên miền phụ (subdomain) dùng chung do **Vercel** sở hữu và quản lý, bạn **không có quyền cấu hình bản ghi DNS** cho tên miền này. Do đó, bạn không thể thêm `viet-typing.vercel.app` vào mục **Domains** trên Resend.
-
-### Giải pháp khắc phục:
-
-1.  **Mua tên miền riêng (Khuyên dùng cho sản phẩm thực tế):**
-    *   Mua một tên miền giá rẻ từ các nhà cung cấp như Hostinger, Namecheap, GoDaddy, Mắt Bão, Nhân Hòa (ví dụ: `viettyping.com`, `viet-typing.vn`, `viettyping.edu.vn`).
-    *   Trỏ tên miền đó về dự án Vercel của bạn (Vercel hỗ trợ cấu hình tên miền tùy chỉnh miễn phí và rất nhanh).
-    *   Sử dụng tên miền này để khai báo trên Resend và cấu hình các bản ghi DNS theo hướng dẫn của Resend.
-2.  **Sử dụng tên miền mặc định của Resend để thử nghiệm (Miễn phí):**
-    *   Mặc định khi tạo tài khoản, Resend cấp cho bạn một địa chỉ gửi thư thử nghiệm là `onboarding@resend.dev`.
-    *   **Giới hạn:** Bạn chỉ có thể gửi email từ địa chỉ này đến **chính email mà bạn đã dùng để đăng ký tài khoản Resend** (Email của bạn - Admin). Nếu gửi đến email của học sinh khác, email sẽ bị chặn.
+Hệ thống sẽ chạy theo logic đăng ký sau:
+*   **Tài khoản thường (Đăng ký qua email/mật khẩu):** Yêu cầu điền họ tên, số điện thoại, email, mật khẩu. Sau khi đăng ký, tài khoản có trạng thái mặc định là **Chờ kích hoạt** (`isActive = false`). Người dùng chỉ được trải nghiệm tối đa 3 bài học đầu và phải đợi Admin phê duyệt kích hoạt tài khoản mới có thể đăng nhập và mở khóa toàn bộ tính năng.
+*   **Tài khoản Google (OAuth 2.0 thật):** Cho phép người dùng đăng nhập bằng tài khoản Google có sẵn trên trình duyệt. Tài khoản này sẽ được **tự động kích hoạt ngay lập tức** (`isActive = true`), mở khóa toàn bộ tính năng mà không cần Admin phê duyệt.
 
 ---
 
-## 2. HƯỚNG DẪN CHI TIẾT CẤU HÌNH GOOGLE OAUTH 2.0 (GOOGLE CLOUD CONSOLE)
+## PHẦN 1: CẤU HÌNH GOOGLE CLOUD CONSOLE
 
-Khi người dùng bấm "Đăng ký/Đăng nhập bằng Google", hệ thống sẽ chuyển hướng sang Google để gọi danh sách tài khoản đã đăng nhập sẵn trên trình duyệt.
+Để gọi danh sách các tài khoản Google đã đăng nhập trên trình duyệt của người dùng, bạn cần tạo mã ứng dụng trên Google Cloud.
 
-### Bước 1: Tạo thông tin xác thực trên Google Cloud Console
+### Bước 1: Tạo dự án mới
 1.  Truy cập [Google Cloud Console](https://console.cloud.google.com/).
-2.  Tạo một dự án mới (ví dụ: `VietTyping`).
-3.  Vào menu **APIs & Services** > **OAuth consent screen** (Màn hình đồng ý OAuth):
-    *   Chọn **User Type** là **External** (để mọi tài khoản gmail đều có thể đăng nhập).
-    *   Điền thông tin ứng dụng: Tên ứng dụng (`VietTyping`), Email hỗ trợ, và Email nhà phát triển.
-    *   Nhấn **Save and Continue** qua các bước Scopes và Test Users.
-4.  Vào mục **Credentials** (Thông tin xác thực):
-    *   Nhấn **+ Create Credentials** > chọn **OAuth client ID**.
-    *   Chọn **Application type** là **Web application**.
-    *   Đặt tên gợi nhớ (ví dụ: `VietTyping Production`).
+2.  Đăng nhập bằng tài khoản Google của bạn.
+3.  Nhấp vào thanh chọn dự án ở góc trên bên trái > bấm **New Project** (Dự án mới).
+4.  Đặt tên dự án (Ví dụ: `VietTyping-App`) và nhấn **Create** (Tạo).
 
-### Bước 2: Cấu hình Redirect URIs và Origins (QUAN TRỌNG)
-Trong phần cài đặt OAuth Client ID ở trên, bạn phải điền chính xác thông tin tên miền của mình:
+### Bước 2: Cấu hình Màn hình đồng ý OAuth (OAuth consent screen)
+1.  Chọn dự án vừa tạo. Tại menu bên trái, vào **APIs & Services** > **OAuth consent screen**.
+2.  Chọn User Type là **External** (cho phép tất cả tài khoản Gmail đăng nhập) > bấm **Create**.
+3.  Điền các thông tin bắt buộc:
+    *   **App name:** `VietTyping`
+    *   **User support email:** Địa chỉ email hỗ trợ của bạn.
+    *   **Developer contact information:** Địa chỉ email của bạn.
+4.  Bấm **Save and Continue** qua các bước Scopes và Test Users (bạn có thể thêm một vài email Gmail thử nghiệm của bạn vào mục Test Users để thử nghiệm khi ứng dụng chưa công khai).
 
-1.  **Authorized JavaScript origins** (Nguồn gốc JavaScript được phép):
-    *   `http://localhost:3000` *(để chạy thử ở máy cá nhân)*
-    *   `https://viet-typing.vercel.app` *(địa chỉ trang web chạy thực tế của bạn)*
-2.  **Authorized redirect URIs** (Đường dẫn tiếp nhận kết quả đăng nhập sau khi xác thực):
-    *   **Nếu bạn dùng Supabase Auth (Khuyên dùng):**
-        Copy địa chỉ Callback URL từ trang quản trị Supabase của bạn (Auth > Providers > Google). Nó sẽ có dạng:
-        `https://[project-ref-id].supabase.co/auth/v1/callback`
-    *   **Nếu bạn dùng NextAuth.js (Auth.js):**
-        `http://localhost:3000/api/auth/callback/google`
-        `https://viet-typing.vercel.app/api/auth/callback/google`
-
-*Bấm **Create** để nhận **Client ID** và **Client Secret**.*
+### Bước 3: Tạo Credentials (Mã xác thực Client)
+1.  Ở menu bên trái, chọn tab **Credentials**.
+2.  Nhấp vào **+ Create Credentials** > chọn **OAuth client ID**.
+3.  Tại phần **Application type**, chọn **Web application**.
+4.  Đặt tên nhận diện (Ví dụ: `VietTyping Web client`).
+5.  Cấu hình các đường dẫn URL:
+    *   **Authorized JavaScript origins** (Nguồn gốc JS được phép gọi Google):
+        *   `http://localhost:3000` *(dùng cho thử nghiệm ở máy cá nhân)*
+        *   `https://viet-typing.vercel.app` *(địa chỉ website chạy chính thức)*
+    *   **Authorized redirect URIs** (URL chuyển hướng tiếp nhận kết quả xác thực):
+        *   Nhập địa chỉ Callback URL lấy từ Supabase Auth (Xem hướng dẫn ở Phần 2).
+        *   *Ví dụ:* `https://[ma-du-an-supabase].supabase.co/auth/v1/callback`
+6.  Bấm **Create**. Bạn sẽ nhận được **Client ID** và **Client Secret**. Hãy lưu giữ hai mã này để cấu hình vào Supabase ở bước sau.
 
 ---
 
-## 3. HƯỚNG DẪN CẤU HÌNH GOOGLE GOOGLE OAUTH VÀO HỆ THỐNG SUPABASE
+## PHẦN 2: THIẾT LẬP TRÊN SUPABASE CONSOLE
 
-Nếu bạn tích hợp hệ thống lưu trữ qua **Supabase**, việc liên kết Google Auth vô cùng đơn giản:
+Supabase cung cấp giải pháp Backend-as-a-Service trọn gói bao gồm Database PostgreSQL và module Authentication rất mạnh mẽ.
+
+### Bước 1: Tạo dự án Supabase
+1.  Truy cập [Supabase.com](https://supabase.com/) và đăng nhập.
+2.  Nhấn **New Project** > chọn Tổ chức (Organization) của bạn.
+3.  Nhập tên dự án (Ví dụ: `viettyping-db`), đặt mật khẩu cho Database, chọn vị trí server gần Việt Nam (Ví dụ: `Singapore - ap-southeast-1`) để tốc độ truyền tải nhanh nhất.
+4.  Nhấn **Create new project** và đợi vài phút để Supabase khởi tạo hạ tầng.
+
+### Bước 2: Kích hoạt Google Auth Provider trong Supabase
+1.  Trong bảng điều khiển dự án Supabase, chọn **Authentication** ở menu bên trái > chọn **Providers** > chọn **Google**.
+2.  Bật switch sang trạng thái **Enabled**.
+3.  Dán mã **Client ID** và **Client Secret** (đã lấy được từ Google Cloud Console ở Phần 1) vào ô tương ứng.
+4.  Sao chép dòng **Redirect URL** ở cuối ô cấu hình của Supabase (ví dụ: `https://xxxx.supabase.co/auth/v1/callback`).
+5.  Quay trở lại trang cấu hình OAuth Client ID trên **Google Cloud Console**, dán đường dẫn này vào mục **Authorized redirect URIs** đã đề cập ở Phần 1, sau đó nhấn **Save**.
+
+### Bước 3: Tắt tính năng Email Confirmation (Xác nhận Email)
+Vì chúng ta **bỏ qua việc gửi email kích hoạt qua Resend hoặc Supabase**, người dùng đăng ký tài khoản thường sẽ được lưu thẳng vào database mà không cần click link xác thực email:
+1.  Trong mục **Authentication** > chọn **Configuration** > chọn **Email Templates** hoặc **Providers** > **Email**.
+2.  Tắt tùy chọn **Confirm email** (hoặc *Double Opt-In*) để tài khoản thường sau khi đăng ký có thể được lưu ngay dưới dạng chờ Admin duyệt (không cần gửi email xác nhận nữa).
+
+---
+
+## PHẦN 3: THIẾT KẾ CƠ SỞ DỮ LIỆU (DATABASE SCHEMA) VÀ TRIGGER TỰ ĐỘNG
+
+Thông tin đăng nhập cốt lõi (Email, Mật khẩu, ID) được Supabase quản lý tự động trong schema nội bộ `auth.users`. Để lưu trữ thêm các trường tùy chỉnh như Họ tên, Số điện thoại, Biệt danh, Khối lớp, Ảnh đại diện, và đặc biệt là **Trạng thái kích hoạt (isActive)**, chúng ta cần tạo một bảng trung gian tên là `profiles` trong schema công khai `public`.
 
 ```mermaid
-sequenceDiagram
-    actor User as Học sinh (Browser)
-    participant App as Ứng dụng VietTyping
-    participant Supa as Supabase Auth
-    participant Google as Google OAuth 2.0
-
-    User->>App: Bấm "Đăng nhập bằng Google"
-    App->>Supa: Gọi hàm signInWithOAuth({ provider: 'google' })
-    Supa->>User: Chuyển hướng đến màn hình đăng nhập Google
-    User->>Google: Chọn tài khoản Gmail đang đăng nhập trên trình duyệt
-    Google->>Supa: Trả về Authorization Code & Token
-    Supa->>App: Chuyển hướng người dùng về trang web kèm session đăng nhập
-    App->>User: Đăng nhập thành công, lưu thông tin học sinh
+erDiagram
+    "auth.users (Bảng mặc định)" ||--|| "public.profiles (Bảng tùy chỉnh)" : "Liên kết qua id"
+    "auth.users (Bảng mặc định)" {
+        uuid id PK
+        string email
+        string encrypted_password
+    }
+    "public.profiles (Bảng tùy chỉnh)" {
+        uuid id PK, FK
+        string name "Họ tên"
+        string phone "Số điện thoại"
+        string nickname "Biệt danh"
+        string grade "Khối lớp"
+        string role "student/teacher/admin"
+        string auth_type "google/normal"
+        boolean is_active "Trạng thái kích hoạt"
+        string avatar "Icon đại diện"
+        timestamp created_at
+    }
 ```
 
-### Các bước cấu hình trên Supabase:
-1.  Truy cập vào trang quản trị **Supabase Dashboard** của bạn.
-2.  Chọn dự án của bạn và di chuyển đến **Authentication** > **Providers** > **Google**.
-3.  Bật (Enable) nhà cung cấp Google.
-4.  Dán **Client ID** và **Client Secret** lấy từ Google Cloud Console ở mục 2 vào.
-5.  Sao chép dòng **Redirect URL** ở cuối khung cấu hình đó và quay lại dán vào mục **Authorized redirect URIs** trên Google Cloud Console.
-6.  Lưu lại cấu hình trên cả hai trang.
+### Bước 1: Tạo bảng `profiles`
+Truy cập **SQL Editor** trên Supabase Dashboard và chạy đoạn lệnh SQL sau để tạo bảng `profiles`:
 
-### Code gọi Google Auth thật trong React/Next.js:
-Để kích hoạt đăng nhập bằng tài khoản Google thật, bạn chỉ cần thay thế hàm giả lập bằng code gọi thư viện Supabase:
+```sql
+-- 1. Tạo bảng profiles lưu thông tin hồ sơ bổ sung
+CREATE TABLE public.profiles (
+  id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT,
+  nickname TEXT,
+  grade TEXT DEFAULT 'Lớp 6',
+  role TEXT DEFAULT 'student' CHECK (role IN ('student', 'teacher', 'admin')),
+  auth_type TEXT NOT NULL CHECK (auth_type IN ('google', 'normal')),
+  is_active BOOLEAN DEFAULT FALSE,
+  avatar TEXT DEFAULT '🦊',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
 
+-- Bật tính năng Row Level Security (RLS) để bảo vệ dữ liệu
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Tạo chính sách (Policies) truy cập dữ liệu
+CREATE POLICY "Cho phép mọi người đọc hồ sơ của nhau" 
+  ON public.profiles FOR SELECT USING (true);
+
+CREATE POLICY "Người dùng chỉ được cập nhật hồ sơ cá nhân" 
+  ON public.profiles FOR UPDATE USING (auth.uid() = id);
+```
+
+### Bước 2: Tạo Trigger tự động đồng bộ tài khoản Google
+Khi người dùng đăng nhập bằng Google lần đầu tiên, Supabase sẽ tự động tạo một tài khoản trong `auth.users`. Đoạn Trigger dưới đây sẽ tự động bắt sự kiện đó để chèn thông tin tương ứng vào bảng `public.profiles` với giá trị `is_active = true` (Tự động kích hoạt không cần duyệt).
+
+Đối với tài khoản thường (đăng ký bằng form), chúng ta sẽ tự ghi trực tiếp thông tin từ Client hoặc Backend với giá trị `is_active = false` (chờ duyệt).
+
+Chạy đoạn SQL này trong **SQL Editor**:
+
+```sql
+-- Tạo hàm xử lý khi có tài khoản mới được tạo
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_name TEXT;
+  v_avatar TEXT;
+  v_auth_type TEXT;
+  v_is_active BOOLEAN;
+BEGIN
+  -- Kiểm tra xem người dùng đăng nhập bằng nhà cung cấp nào
+  IF NEW.raw_app_meta_data->>'provider' = 'google' THEN
+    v_name := COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1));
+    v_avatar := COALESCE(NEW.raw_user_meta_data->>'avatar_url', '🦊');
+    v_auth_type := 'google';
+    v_is_active := TRUE; -- TỰ ĐỘNG MỞ KHÓA CHO GOOGLE AUTH
+  ELSE
+    -- Đối với đăng ký thường, dữ liệu được ghi tay từ frontend/API nên ta không cần ghi đè ở trigger này
+    RETURN NEW;
+  END IF;
+
+  -- Ghi thông tin tài khoản Google vào bảng profiles
+  INSERT INTO public.profiles (id, name, phone, nickname, grade, role, auth_type, is_active, avatar)
+  VALUES (
+    NEW.id,
+    v_name,
+    '', -- Tài khoản google không có sẵn số điện thoại
+    split_part(NEW.email, '@', 1), -- Biệt danh mặc định lấy từ phần trước @ của email
+    'Lớp 6',
+    'student',
+    v_auth_type,
+    v_is_active,
+    v_avatar
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET 
+    name = EXCLUDED.name,
+    avatar = EXCLUDED.avatar;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Gán hàm xử lý trên vào Trigger của bảng auth.users
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+```
+
+---
+
+## PHẦN 4: KẾT NỐI VÀ XỬ LÝ TRONG MÃ NGUỒN NEXT.JS
+
+### Bước 1: Cài đặt thư viện Supabase Client
+Chạy lệnh cài đặt thư viện chính thức tại thư mục dự án:
+```bash
+npm install @supabase/supabase-js
+```
+
+### Bước 2: Thiết lập file môi trường `.env.local`
+Tạo/Cập nhật file `.env.local` ở thư mục gốc của dự án (đã được cấu hình trong `.gitignore` để không bị lộ lên GitHub):
+```bash
+# Lấy từ Project Settings > API trên Supabase Dashboard
+NEXT_PUBLIC_SUPABASE_URL="https://[ma-du-an-cua-ban].supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOi..."
+```
+
+### Bước 3: Khởi tạo Supabase Client
+Tạo file `src/lib/supabase.ts`:
 ```typescript
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+```
+
+### Bước 4: Viết hàm đăng ký và đăng nhập trong Context/Auth Service
+
+#### 1. Đăng ký tài khoản thường (Normal Signup):
+```typescript
+import { supabase } from '@/lib/supabase';
+
+export const signupNormal = async (userData: {
+  name: string;
+  phone: string;
+  email: string;
+  password: string;
+}) => {
+  // 1. Tạo tài khoản đăng nhập trong auth.users của Supabase
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: userData.email,
+    password: userData.password,
+  });
+
+  if (authError) {
+    return { success: false, error: authError.message };
+  }
+
+  if (!authData.user) {
+    return { success: false, error: "Đăng ký không thành công, vui lòng thử lại." };
+  }
+
+  // 2. Tự chèn thủ công thông tin hồ sơ kèm số điện thoại và đặt is_active = FALSE (chờ duyệt)
+  const { error: profileError } = await supabase.from('profiles').insert([
+    {
+      id: authData.user.id,
+      name: userData.name,
+      phone: userData.phone,
+      nickname: userData.email.split('@')[0],
+      grade: 'Lớp 6',
+      role: 'student',
+      auth_type: 'normal',
+      is_active: false, // YÊU CẦU ADMIN DUYỆT ĐỂ MỞ KHÓA
+      avatar: '🦊',
+    }
+  ]);
+
+  if (profileError) {
+    console.error("Lỗi tạo profile:", profileError.message);
+    // Hủy tài khoản auth nếu tạo profile thất bại để tránh rác database
+    await supabase.auth.signOut();
+    return { success: false, error: "Có lỗi khi lưu thông tin hồ sơ bổ sung!" };
+  }
+
+  return { success: true, message: "Đăng ký thành công! Vui lòng chờ Giáo viên hoặc Admin duyệt để đăng nhập." };
+};
+```
+
+#### 2. Đăng nhập tài khoản thường và Kiểm tra kích hoạt:
+Khi người dùng đăng nhập tài khoản thường, hệ thống cần chặn lại nếu Admin chưa duyệt kích hoạt (`is_active = false`).
+```typescript
+export const loginNormal = async (email: string, password: string) => {
+  // 1. Đăng nhập bằng tài khoản email/mật khẩu thông thường
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (authError) {
+    return { success: false, error: authError.message };
+  }
+
+  const userId = authData.user?.id;
+
+  // 2. Truy vấn thông tin kích hoạt trong bảng profiles
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (profileError || !profile) {
+    await supabase.auth.signOut();
+    return { success: false, error: "Không tìm thấy hồ sơ người dùng!" };
+  }
+
+  // 3. Kiểm tra trạng thái phê duyệt của Admin
+  if (!profile.is_active) {
+    await supabase.auth.signOut(); // Đăng xuất ra ngay lập tức
+    return { success: false, error: "Tài khoản của bạn đang chờ phê duyệt. Vui lòng liên hệ Admin để được kích hoạt!" };
+  }
+
+  return { success: true, user: { ...authData.user, ...profile } };
+};
+```
+
+#### 3. Đăng nhập/Đăng ký bằng Google Auth thật (Gọi tài khoản trình duyệt):
+```typescript
 export const loginWithGoogleReal = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/typing`, // Trang chuyển hướng sau khi đăng nhập thành công
+      redirectTo: `${window.location.origin}/typing`,
       queryParams: {
         access_type: 'offline',
-        prompt: 'select_account', // Bắt buộc Google hiển thị danh sách tài khoản đã đăng nhập trên trình duyệt để chọn
+        prompt: 'select_account', // Yêu cầu hiển thị bảng chọn các tài khoản Google đã đăng nhập sẵn trên trình duyệt
       },
     },
   });
-  
+
   if (error) {
-    console.error("Lỗi đăng nhập Google:", error.message);
     return { success: false, error: error.message };
   }
+
+  // Quá trình đăng nhập Google sẽ chuyển hướng người dùng sang trang Google để chọn tài khoản,
+  // sau đó Google trả về kết quả cho Supabase. Trigger tự động của Supabase sẽ thêm dữ liệu
+  // vào bảng profiles với is_active = TRUE và chuyển hướng thẳng học sinh về trang luyện gõ.
   return { success: true };
 };
 ```
 
 ---
 
-## 4. HƯỚNG DẪN CHI TIẾT CẤU HÌNH VÀ SỬ DỤNG RESEND EMAIL
+## PHẦN 5: GIAO DIỆN QUẢN TRỊ ADMIN PHÊ DUYỆT TÀI KHOẢN
 
-### Bước 1: Lấy API Key từ Resend
-1.  Truy cập [Resend.com](https://resend.com/) và đăng ký tài khoản.
-2.  Vào mục **API Keys** > chọn **Create API Key**.
-3.  Đặt tên (Ví dụ: `VietTyping-Email-Service`) và chọn quyền **Full Access**.
-4.  Sao chép chuỗi API Key được hiển thị (chuỗi bắt đầu bằng `re_...`).
+Trong phần quản lý danh sách tài khoản của Giáo viên/Quản trị viên, bạn chỉ cần thực hiện thao tác cập nhật cột `is_active` thành `TRUE` để mở khóa hoàn toàn tài khoản thường:
 
-### Bước 2: Khai báo DNS trên Resend (Nếu có tên miền riêng)
-1.  Vào mục **Domains** trên Resend > chọn **Add Domain**.
-2.  Nhập tên miền của bạn (ví dụ: `viettyping.vn`) và chọn khu vực (Region).
-3.  Resend sẽ hiển thị danh sách các bản ghi DNS. Bạn hãy đăng nhập vào nơi bạn mua tên miền và thêm các bản ghi này vào cấu hình DNS:
-    *   **Bản ghi TXT thứ nhất (DKIM):** Tên bản ghi, giá trị bản ghi theo mẫu của Resend.
-    *   **Bản ghi TXT thứ hai (SPF):** `v=spf1 include:amazonses.com ~all` (hoặc giá trị Resend cấp).
-    *   **Bản ghi MX (nếu có):** Nhận diện máy chủ nhận thư của Resend.
-4.  Sau khi thêm xong trên trang quản trị tên miền, bấm **Verify** trên Resend. Khi trạng thái chuyển sang màu xanh lá cây (**Verified**), bạn đã có thể gửi email chính thức từ địa chỉ email theo tên miền của mình (ví dụ: `hoc-tap@viettyping.vn`).
+```typescript
+export const adminApproveUser = async (studentId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ is_active: true })
+    .eq('id', studentId);
 
-### Bước 3: Triển khai API Route gửi Email trong Next.js
-
-1.  Cài đặt thư viện:
-    ```bash
-    npm install resend
-    ```
-2.  Thêm biến môi trường vào file `.env.local` ở thư mục gốc dự án:
-    ```bash
-    RESEND_API_KEY="re_chuoi-api-key-cua-ban"
-    ```
-3.  Viết API gửi mail ở file `src/app/api/send-email/route.ts`:
-    ```typescript
-    import { NextResponse } from 'next/server';
-    import { Resend } from 'resend';
-
-    const resend = new Resend(process.env.RESEND_API_KEY);
-
-    export async function POST(request: Request) {
-      try {
-        const { email, name, subject, contentHtml } = await request.json();
-
-        // Nếu dùng tên miền onboarding thử nghiệm của Resend
-        // và bạn chưa xác thực tên miền riêng, thì địa chỉ 'from' phải là:
-        // 'onboarding@resend.dev' và 'to' chỉ gửi được cho chính email đăng ký Resend của bạn.
-        const sender = process.env.NODE_ENV === 'production' && process.env.VERIFIED_DOMAIN
-          ? `VietTyping <no-reply@${process.env.VERIFIED_DOMAIN}>`
-          : 'VietTyping Test <onboarding@resend.dev>';
-
-        const data = await resend.emails.send({
-          from: sender,
-          to: [email],
-          subject: subject || 'Thông báo từ hệ thống VietTyping 🚀',
-          html: contentHtml || `<p>Xin chào ${name}, chúc bạn học tập tốt!</p>`,
-        });
-
-        return NextResponse.json({ success: true, data });
-      } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-      }
-    }
-    ```
-
----
-
-## 5. TỔNG KẾT LUỒNG ĐĂNG KÝ HỌC SINH SAU KHI ĐÃ CẤU HÌNH THÀNH CÔNG
-
-Sau khi hoàn thiện tích hợp, hệ thống của bạn sẽ chạy theo luồng logic chuẩn sau:
-
-| Loại Tài Khoản | Đăng Ký & Xác Thực | Trạng Thế Ban Đầu | Quyền Hạn Đổi Hồ Sơ |
-| :--- | :--- | :--- | :--- |
-| **Google Auth (Thật)** | Chọn tài khoản Gmail đang lưu trên trình duyệt qua popup Google. | **Kích hoạt ngay lập tức** | Cho phép đổi Avatar, Biệt danh, Họ tên, Lớp, Số điện thoại, Email. Dữ liệu đồng bộ Supabase & Google Sheets. |
-| **Tài Khoản Thường** | Điền Họ tên, SĐT, Email, Mật khẩu. Hệ thống gửi Email thông báo/yêu cầu kích hoạt qua Resend. | **Chờ duyệt (Pending)** (Không thể đăng nhập cho đến khi Admin phê duyệt) | Sau khi được Admin bật **isActive**, cho phép đăng nhập và đổi Avatar, Biệt danh, Họ tên, Lớp, Số điện thoại, Email. |
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  return { success: true };
+};
+```
