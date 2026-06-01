@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSound } from '@/contexts/SoundContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Be_Vietnam_Pro } from 'next/font/google';
 import { 
   LayoutDashboard, 
@@ -29,7 +30,33 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { playSound } = useSound();
+  const { user, isLoading, isLoggedIn } = useAuth();
+
+  // Kiểm tra quyền truy cập Admin/Giáo viên
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isLoggedIn || !user || (user.role !== 'admin' && user.role !== 'teacher')) {
+        router.push('/login');
+      }
+    }
+  }, [isLoading, isLoggedIn, user, router]);
+
+  if (isLoading) {
+    return (
+      <div className={`min-h-screen bg-slate-50 flex items-center justify-center ${beVietnamPro.className}`}>
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Đang xác thực quyền...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn || !user || (user.role !== 'admin' && user.role !== 'teacher')) {
+    return null;
+  }
 
   const menuItems = [
     {

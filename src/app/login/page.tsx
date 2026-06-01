@@ -397,33 +397,7 @@ export default function LoginPage() {
               <span>Đăng nhập bằng Google</span>
             </button>
 
-            {/* Quick Mocks for Dev */}
-            <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1 text-center">Tài khoản Dev Mẫu (Kích hoạt sẵn)</span>
-              <div className="grid grid-cols-2 gap-1.5 text-[9px] font-bold text-slate-500">
-                <button
-                  type="button"
-                  onClick={() => { setLoginEmail("admin@viettyping.edu.vn"); setLoginPassword("admin123"); playSound("click"); }}
-                  className="bg-white border border-slate-200 hover:border-sky-300 py-1 rounded"
-                >
-                  Admin: admin123
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setLoginEmail("giao-vien@viettyping.edu.vn"); setLoginPassword("teacher123"); playSound("click"); }}
-                  className="bg-white border border-slate-200 hover:border-sky-300 py-1 rounded"
-                >
-                  Giáo viên: teacher123
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setLoginEmail("nam.nguyen@viettyping.edu.vn"); setLoginPassword("student123"); playSound("click"); }}
-                  className="bg-white border border-slate-200 hover:border-sky-300 py-1 rounded col-span-2"
-                >
-                  Học sinh (đã kích hoạt): student123
-                </button>
-              </div>
-            </div>
+
           </form>
         ) : (
           /* SIGNUP FORM */
