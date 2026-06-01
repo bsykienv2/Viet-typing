@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudent, StudentInfo } from "@/contexts/StudentContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { X, Sparkles, User, GraduationCap, Heart, Key, Lock, Eye, EyeOff, CheckCircle, ShieldAlert } from "lucide-react";
+import Avatar from "./Avatar";
 import confetti from "canvas-confetti";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -57,6 +58,14 @@ export default function StudentConfigModal() {
   const isNormalUser = isLoggedIn && user?.authType === "normal";
   const isNormalAndNotActivated = isNormalUser && user?.isActive !== true;
   const canEdit = !isNormalAndNotActivated;
+
+  const avatarOptions = useMemo(() => {
+    const list = [...AVATARS];
+    if (isLoggedIn && user?.googleAvatarUrl) {
+      list.unshift({ emoji: user.googleAvatarUrl, name: "Google Photo" });
+    }
+    return list;
+  }, [isLoggedIn, user?.googleAvatarUrl]);
 
   // Sync profile details when opening modal or user changing
   useEffect(() => {
@@ -319,7 +328,9 @@ export default function StudentConfigModal() {
               <>
                 {/* Header */}
                 <div className="text-center mt-2 mb-6">
-                  <span className="text-5xl inline-block animate-bounce mb-2">{avatar}</span>
+                  <div className="inline-block animate-bounce mb-2">
+                    <Avatar avatar={avatar} className="text-5xl" imgClassName="w-16 h-16 border-4 border-sky-400" />
+                  </div>
                   <h2 className="text-3xl font-black text-sky-600 tracking-wide flex items-center justify-center gap-2">
                     <span>Hồ Sơ Cá Nhân</span>
                     <Sparkles className="w-6 h-6 text-amber-500 fill-amber-300 animate-pulse" />
@@ -355,24 +366,26 @@ export default function StudentConfigModal() {
                       <span>1. Chọn ảnh đại diện của bạn:</span>
                     </label>
                     <div className="grid grid-cols-5 gap-2.5 p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl">
-                      {AVATARS.map((item) => (
+                      {avatarOptions.map((item) => (
                         <button
                           key={item.emoji}
                           type="button"
                           disabled={!canEdit}
                           onClick={() => handleSelectAvatar(item.emoji)}
-                          className={`text-3xl p-2 rounded-xl transition-all relative border-2 cursor-pointer ${
+                          className={`p-2 rounded-xl transition-all relative border-2 cursor-pointer flex items-center justify-center ${
                             avatar === item.emoji
                               ? "bg-sky-50 border-sky-400 scale-110 shadow-sm"
                               : "bg-white border-transparent hover:bg-slate-100 hover:scale-105"
                           } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
                           {avatar === item.emoji && (
-                            <span className="absolute -top-1.5 -right-1.5 text-xs bg-sky-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                            <span className="absolute -top-1.5 -right-1.5 text-xs bg-sky-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold z-10">
                               ✓
                             </span>
                           )}
-                          <span className="block transform hover:rotate-12 transition-transform">{item.emoji}</span>
+                          <span className="transform hover:rotate-12 transition-transform w-8 h-8 flex items-center justify-center">
+                            <Avatar avatar={item.emoji} className="text-3xl" imgClassName="w-8 h-8" />
+                          </span>
                         </button>
                       ))}
                     </div>

@@ -11,6 +11,7 @@ import { Be_Vietnam_Pro } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, Check, Keyboard, Home, GraduationCap, Lock, Trophy, Flame, HelpCircle, User, Sparkles, Star } from 'lucide-react';
 import SpinWheelGame from '@/components/SpinWheelGame';
+import Avatar from '@/components/Avatar';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -157,6 +158,17 @@ export default function TypingPage() {
         setIsTeacherVerified(true);
         setUserRole('teacher');
       } else {
+        setIsTeacherVerified(false);
+        setUserRole('student');
+      }
+    } else {
+      // Khi không đăng nhập hoặc đăng xuất
+      const teacherAuth = typeof window !== 'undefined' ? sessionStorage.getItem('viettyping_teacher_authenticated') : null;
+      if (teacherAuth === 'true') {
+        setIsTeacherVerified(true);
+        setUserRole('teacher');
+      } else {
+        setIsTeacherVerified(false);
         setUserRole('student');
       }
     }
@@ -434,7 +446,7 @@ export default function TypingPage() {
                     )}
 
                     {/* Avatar Emoji */}
-                    <span className="text-2xl shrink-0 filter drop-shadow-sm">{student.avatar}</span>
+                    <Avatar avatar={student.avatar} className="text-2xl shrink-0 filter drop-shadow-sm" imgClassName="w-8 h-8" />
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">

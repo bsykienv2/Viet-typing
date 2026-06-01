@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Clock, Percent, TrendingUp, Activity, Search, Filter, Monitor, Flame, Award, Sparkles } from 'lucide-react';
 import { useStudent } from '@/contexts/StudentContext';
+import Avatar from '@/components/Avatar';
 import { lessons } from '@/data/lessons';
 import { useSound } from '@/contexts/SoundContext';
 
@@ -137,7 +138,9 @@ export default function AdminDashboard() {
                 {filteredRoster.map((s) => (
                   <tr key={s.id} className="border-b border-slate-100 hover:bg-sky-50/50 transition-colors group cursor-pointer" onClick={() => playSound('click')}>
                     <td className="py-3.5 pl-2 flex items-center gap-3">
-                      <span className="text-2xl bg-slate-100 w-9 h-9 flex items-center justify-center rounded-xl border-2 border-slate-200">{s.avatar}</span>
+                      <div className="text-2xl bg-slate-100 w-9 h-9 flex items-center justify-center rounded-xl border-2 border-slate-200 overflow-hidden shrink-0">
+                        <Avatar avatar={s.avatar} className="text-2xl" imgClassName="w-full h-full" />
+                      </div>
                       <div><div className="text-sm font-extrabold text-slate-700 group-hover:text-sky-600 transition-colors">{s.name}</div><div className="text-xs text-slate-400 font-semibold">@{s.nickname}</div></div>
                     </td>
                     <td className="py-3.5 text-center text-xs font-bold text-slate-500">{s.grade}</td>
@@ -161,7 +164,9 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               {liveActivities.map((act) => (
                 <div key={act.id} className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 flex gap-3 hover:border-sky-200 hover:bg-sky-50/30 transition-all group">
-                  <span className="text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-xl border-2 border-slate-200 shrink-0">{act.avatar}</span>
+                  <div className="text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-xl border-2 border-slate-200 shrink-0 overflow-hidden">
+                    <Avatar avatar={act.avatar} className="text-2xl" imgClassName="w-full h-full" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1 mb-1"><span className="text-xs font-black text-slate-700 truncate group-hover:text-sky-600 transition-colors">{act.student}</span><span className="text-[10px] text-slate-400 font-bold whitespace-nowrap">{act.time}</span></div>
                     <p className="text-[11px] text-slate-500 font-bold truncate mb-2">{act.lessonName}</p>

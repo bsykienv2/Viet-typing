@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useProgress } from '@/hooks/useProgress';
 import { subjects } from '@/data/subjects';
 import { IoArrowBack, IoStatsChart, IoTime, IoWarning, IoCheckmarkCircle } from 'react-icons/io5';
+import Avatar from '@/components/Avatar';
 import ReportCardAnalyzer from '@/components/ReportCardAnalyzer';
 import { useSound } from '@/contexts/SoundContext';
 import { useStudent } from '@/contexts/StudentContext';
@@ -111,7 +112,7 @@ export default function ParentsPage() {
               <h1 className="text-3xl font-black text-slate-800 tracking-wide">Góc Phụ Huynh 👨‍👩‍👧‍👦</h1>
               {studentInfo ? (
                 <div className="flex items-center gap-1.5 mt-1 bg-white/50 px-3 py-1 rounded-xl border border-slate-205/40 shadow-sm w-fit">
-                  <span className="text-lg">{studentInfo.avatar}</span>
+                  <Avatar avatar={studentInfo.avatar} className="text-lg" imgClassName="w-6 h-6" />
                   <p className="text-slate-600 text-xs md:text-sm font-semibold">
                     Đang xem tiến độ: <span className="font-black text-indigo-700">{studentInfo.name || studentInfo.nickname}</span> ({studentInfo.nickname}) • <span className="text-slate-500 font-bold">{studentInfo.grade}</span>
                   </p>

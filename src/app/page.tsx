@@ -8,6 +8,7 @@ import { Keyboard, Users, BarChart3, Shield, ChevronRight, Zap, Target, Award, G
 import { useSound } from '@/contexts/SoundContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useStudent } from '@/contexts/StudentContext';
+import Avatar from '@/components/Avatar';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -165,7 +166,7 @@ export default function HomePage() {
                   className="flex items-center gap-2 hover:bg-slate-100/80 px-2 py-1 rounded-xl transition-all text-left cursor-pointer"
                   title="Chỉnh sửa hồ sơ"
                 >
-                  <span className="text-lg">{user?.avatar || '👤'}</span>
+                  <Avatar avatar={user?.avatar || '👤'} className="text-lg" imgClassName="w-6 h-6 border border-slate-200" />
                   <div className="text-left leading-tight hidden md:block">
                     <span className="text-xs font-black text-slate-800 block hover:text-sky-600 transition-colors">{user?.name}</span>
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">

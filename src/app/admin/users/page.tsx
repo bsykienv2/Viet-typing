@@ -15,6 +15,7 @@ import {
   XCircle, 
   AlertCircle, 
   User, 
+  Users,
   Mail, 
   Phone, 
   Calendar, 
@@ -32,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useAuth, User as AuthUser } from '@/contexts/AuthContext';
 import { useSound } from '@/contexts/SoundContext';
+import Avatar from '@/components/Avatar';
 
 // Emojis danh sách avatar có sẵn cho giáo viên/học sinh chọn
 const AVATAR_OPTIONS = ['💻', '🦊', '🤖', '🎧', '⚡', '🐉', '👾', '👑', '👩‍🏫', '🎓', '⭐', '🍀', '🍎', '🚀'];
@@ -52,6 +54,7 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [authFilter, setAuthFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'active'>('all');
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -149,6 +152,15 @@ export default function AdminUsersPage() {
       u.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.phone.includes(searchTerm);
 
+    // Tab filter: 'pending' only shows normal accounts that are not activated yet
+    // 'active' shows currently activated accounts
+    let matchesTab = true;
+    if (activeTab === 'pending') {
+      matchesTab = !u.isActive && u.authType === 'normal';
+    } else if (activeTab === 'active') {
+      matchesTab = u.isActive;
+    }
+
     const matchesRole = roleFilter === 'all' ? true : u.role === roleFilter;
     const matchesStatus = statusFilter === 'all' 
       ? true 
@@ -157,7 +169,7 @@ export default function AdminUsersPage() {
         : !u.isActive;
     const matchesAuth = authFilter === 'all' ? true : u.authType === authFilter;
 
-    return matchesSearch && matchesRole && matchesStatus && matchesAuth;
+    return matchesSearch && matchesTab && matchesRole && matchesStatus && matchesAuth;
   });
 
   // Toggle user active status directly from the list
@@ -462,6 +474,83 @@ export default function AdminUsersPage() {
 
       </div>
 
+      {/* Tab bar */}
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-4 mb-6">
+        <button
+          onClick={() => {
+            playSound('click');
+            setActiveTab('all');
+          }}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all duration-200 ${
+            activeTab === 'all'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 scale-102'
+              : 'text-slate-500 hover:text-slate-850 hover:bg-slate-100'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Tất cả</span>
+          <span className={`px-2 py-0.5 text-[11px] rounded-full font-black transition-all ${
+            activeTab === 'all' ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-500'
+          }`}>
+            {totalUsers}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            playSound('click');
+            setActiveTab('pending');
+            setStatusFilter('all');
+          }}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all duration-200 relative ${
+            activeTab === 'pending'
+              ? 'bg-amber-500 text-white shadow-lg shadow-amber-100 scale-102'
+              : 'text-slate-500 hover:text-slate-850 hover:bg-slate-100'
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          <span>Chờ phê duyệt</span>
+          {pendingApprovals > 0 ? (
+            <span className="flex items-center gap-1.5">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-200"></span>
+              </span>
+              <span className={`px-2 py-0.5 text-[11px] rounded-full font-black ${
+                activeTab === 'pending' ? 'bg-amber-650 text-white' : 'bg-amber-100 text-amber-700'
+              }`}>
+                {pendingApprovals}
+              </span>
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 text-[11px] rounded-full font-black bg-slate-100 text-slate-500">
+              0
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            playSound('click');
+            setActiveTab('active');
+            setStatusFilter('all');
+          }}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all duration-200 ${
+            activeTab === 'active'
+              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100 scale-102'
+              : 'text-slate-500 hover:text-slate-850 hover:bg-slate-100'
+          }`}
+        >
+          <CheckCircle2 className="w-4 h-4" />
+          <span>Đang hoạt động</span>
+          <span className={`px-2 py-0.5 text-[11px] rounded-full font-black transition-all ${
+            activeTab === 'active' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500'
+          }`}>
+            {activeUsers}
+          </span>
+        </button>
+      </div>
+
       {/* Filter and Search Panel */}
       <div className="bg-white border-2 border-slate-200/80 rounded-3xl p-6 shadow-sm space-y-4 relative">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -542,7 +631,7 @@ export default function AdminUsersPage() {
             </div>
 
             {/* Reset button if filter is active */}
-            {(roleFilter !== 'all' || statusFilter !== 'all' || authFilter !== 'all' || searchTerm) && (
+            {(roleFilter !== 'all' || statusFilter !== 'all' || authFilter !== 'all' || searchTerm || activeTab !== 'all') && (
               <button
                 onClick={() => {
                   playSound('click');
@@ -550,6 +639,7 @@ export default function AdminUsersPage() {
                   setStatusFilter('all');
                   setAuthFilter('all');
                   setSearchTerm('');
+                  setActiveTab('all');
                   showToast('Đã xóa tất cả bộ lọc', 'info');
                 }}
                 className="flex items-center gap-1 text-xs font-extrabold text-indigo-600 hover:text-indigo-800 bg-indigo-50 border border-indigo-200 px-4 py-2.5 rounded-2xl transition-all"
@@ -587,12 +677,12 @@ export default function AdminUsersPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b-2 border-slate-100 text-slate-400 font-black text-xs uppercase tracking-wider">
-                  <th className="py-4 px-6">Người dùng</th>
-                  <th className="py-4 px-6">Thông tin liên hệ</th>
-                  <th className="py-4 px-6">Vai trò</th>
-                  <th className="py-4 px-6">Loại tài khoản</th>
-                  <th className="py-4 px-6">Trạng thái</th>
-                  <th className="py-4 px-6 text-center">Hành động</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Người dùng</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Thông tin liên hệ</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Vai trò</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Loại tài khoản</th>
+                  <th className="py-4 px-6 whitespace-nowrap">Trạng thái</th>
+                  <th className="py-4 px-6 text-center whitespace-nowrap">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y border-slate-100">
@@ -605,10 +695,10 @@ export default function AdminUsersPage() {
                       className="hover:bg-slate-50/50 transition-all font-semibold text-slate-700"
                     >
                       {/* User Column */}
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xl shadow-sm">
-                            {userItem.avatar || '👤'}
+                          <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xl shadow-sm overflow-hidden shrink-0">
+                            <Avatar avatar={userItem.avatar} className="text-xl" imgClassName="w-full h-full" />
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
@@ -627,7 +717,7 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Contact Column */}
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 whitespace-nowrap">
                         <div className="space-y-0.5 text-xs">
                           <div className="flex items-center gap-1 text-slate-600 font-bold">
                             <Mail className="w-3.5 h-3.5 text-slate-400" />
@@ -643,7 +733,7 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Role Badge Column */}
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 whitespace-nowrap">
                         {userItem.role === 'admin' ? (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-full text-xs font-black">
                             <Shield className="w-3.5 h-3.5" />
@@ -663,7 +753,7 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Auth Type Column */}
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 whitespace-nowrap">
                         {userItem.authType === 'google' ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 text-slate-700 border border-slate-200 rounded-full text-[11px] font-bold">
                             <span className="w-2 h-2 rounded-full bg-gradient-to-tr from-rose-500 via-emerald-500 to-sky-500" />
@@ -678,29 +768,35 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Status Active Toggle Column */}
-                      <td className="py-4 px-6">
-                        <button
-                          onClick={() => handleToggleStatus(userItem)}
-                          disabled={isSelf}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border text-xs font-black shadow-sm transition-all outline-none ${
-                            userItem.isActive
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/70'
-                              : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100/70'
-                          } ${isSelf ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
-                          title={isSelf ? 'Bạn không thể khóa tài khoản chính mình' : 'Bấm để đổi trạng thái kích hoạt'}
-                        >
-                          {userItem.isActive ? (
-                            <>
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                              <span>Hoạt động</span>
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="w-4 h-4 text-amber-600" />
-                              <span>Chờ duyệt / Khóa</span>
-                            </>
-                          )}
-                        </button>
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        {userItem.isActive ? (
+                          <button
+                            onClick={() => handleToggleStatus(userItem)}
+                            disabled={isSelf}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border text-xs font-black shadow-sm transition-all outline-none bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/70 ${
+                              isSelf ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+                            }`}
+                            title={isSelf ? 'Bạn không thể khóa tài khoản chính mình' : 'Bấm để vô hiệu hóa tài khoản'}
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Hoạt động</span>
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleToggleStatus(userItem)}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-md shadow-amber-100 hover:scale-105 active:scale-95 transition-all outline-none cursor-pointer"
+                              title="Bấm để phê duyệt tài khoản này"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Phê duyệt</span>
+                            </button>
+                            <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-bold bg-slate-100 border border-slate-200 px-2 py-1 rounded-xl">
+                              <Clock className="w-3 h-3 text-slate-400" />
+                              <span>Chờ duyệt</span>
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Actions Column */}
@@ -897,35 +993,35 @@ export default function AdminUsersPage() {
                 )}
               </div>
 
-              {/* Row 4: Auth Type & Activation */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-wider">Phương thức đăng ký</label>
-                  <select
-                    value={addForm.authType}
-                    onChange={(e) => {
-                      const value = e.target.value as 'normal' | 'google';
-                      setAddForm(prev => ({ 
-                        ...prev, 
-                        authType: value,
-                        // Mặc định tài khoản Google tự động kích hoạt
-                        isActive: value === 'google' ? true : false 
-                      }));
-                    }}
-                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl font-bold text-sm outline-none transition-all"
-                  >
-                    <option value="normal">Mật khẩu riêng (Đăng ký thường)</option>
-                    <option value="google">Liên kết Google OAuth (Không mật khẩu)</option>
-                  </select>
-                </div>
+              {/* Row 4: Auth, Status & Avatar Selector Side-by-Side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wider">Phương thức đăng ký</label>
+                    <select
+                      value={addForm.authType}
+                      onChange={(e) => {
+                        const value = e.target.value as 'normal' | 'google';
+                        setAddForm(prev => ({ 
+                          ...prev, 
+                          authType: value,
+                          // Mặc định tài khoản Google tự động kích hoạt
+                          isActive: value === 'google' ? true : false 
+                        }));
+                      }}
+                      className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl font-bold text-sm outline-none transition-all"
+                    >
+                      <option value="normal">Mật khẩu riêng (Đăng ký thường)</option>
+                      <option value="google">Liên kết Google OAuth (Không mật khẩu)</option>
+                    </select>
+                  </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Kích hoạt tài khoản</label>
-                  <div className="flex items-center gap-3 h-[48px]">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Kích hoạt tài khoản</label>
                     <button
                       type="button"
                       onClick={() => setAddForm(prev => ({ ...prev, isActive: !prev.isActive }))}
-                      className={`flex items-center gap-1.5 px-4 py-2 border-2 rounded-2xl font-bold text-xs shadow-sm transition-all ${
+                      className={`flex items-center gap-1.5 px-4 py-2.5 border-2 rounded-2xl font-bold text-xs shadow-sm transition-all w-full justify-center ${
                         addForm.isActive 
                           ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
                           : 'bg-amber-50 text-amber-800 border-amber-300'
@@ -943,6 +1039,26 @@ export default function AdminUsersPage() {
                         </>
                       )}
                     </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Chọn ảnh đại diện Emoji</label>
+                  <div className="grid grid-cols-7 gap-1.5 max-w-[280px]">
+                    {AVATAR_OPTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => setAddForm(prev => ({ ...prev, avatar: emoji }))}
+                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-base hover:scale-110 active:scale-95 shadow-sm transition-all ${
+                          addForm.avatar === emoji 
+                            ? 'bg-indigo-50 border-indigo-600 scale-105' 
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -974,27 +1090,6 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
               )}
-
-              {/* Choose Avatar Emoji */}
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Chọn ảnh đại diện Emoji</label>
-                <div className="flex flex-wrap gap-2.5">
-                  {AVATAR_OPTIONS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => setAddForm(prev => ({ ...prev, avatar: emoji }))}
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg hover:scale-110 active:scale-95 shadow-sm transition-all ${
-                        addForm.avatar === emoji 
-                          ? 'bg-indigo-50 border-indigo-600 scale-105' 
-                          : 'bg-white border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Form Actions */}
               <div className="pt-4 border-t-2 border-slate-100 flex items-center justify-end gap-3">
@@ -1147,58 +1242,59 @@ export default function AdminUsersPage() {
                 )}
               </div>
 
-              {/* Row 4: Status Active */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Trạng thái kích hoạt</label>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    disabled={selectedUser.id === currentUser?.id}
-                    onClick={() => setEditForm(prev => ({ ...prev, isActive: !prev.isActive }))}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 border-2 rounded-2xl font-bold text-xs shadow-sm transition-all ${
-                      selectedUser.id === currentUser?.id
-                        ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                        : editForm.isActive 
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100/50' 
-                          : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100/50'
-                    }`}
-                  >
-                    {editForm.isActive ? (
-                      <>
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Đã kích hoạt</span>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-4 h-4 text-amber-600" />
-                        <span>Đang bị khóa / Chờ duyệt</span>
-                      </>
-                    )}
-                  </button>
-                  {selectedUser.id === currentUser?.id && (
-                    <span className="text-[10px] text-slate-400 font-bold">* Không thể tự thay đổi trạng thái của chính bạn</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Choose Avatar Emoji */}
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Chọn ảnh đại diện Emoji</label>
-                <div className="flex flex-wrap gap-2.5">
-                  {AVATAR_OPTIONS.map((emoji) => (
+              {/* Row 4: Status Active & Avatar Selector Side-by-Side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Trạng thái kích hoạt</label>
+                  <div className="flex flex-col gap-2">
                     <button
-                      key={emoji}
                       type="button"
-                      onClick={() => setEditForm(prev => ({ ...prev, avatar: emoji }))}
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg hover:scale-110 active:scale-95 shadow-sm transition-all ${
-                        editForm.avatar === emoji 
-                          ? 'bg-indigo-50 border-indigo-600 scale-105' 
-                          : 'bg-white border-slate-200 hover:border-slate-300'
+                      disabled={selectedUser.id === currentUser?.id}
+                      onClick={() => setEditForm(prev => ({ ...prev, isActive: !prev.isActive }))}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 border-2 rounded-2xl font-bold text-xs shadow-sm transition-all w-full justify-center ${
+                        selectedUser.id === currentUser?.id
+                          ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                          : editForm.isActive 
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100/50' 
+                            : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100/50'
                       }`}
                     >
-                      {emoji}
+                      {editForm.isActive ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-600" />
+                          <span>Đã kích hoạt</span>
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-4 h-4 text-amber-600" />
+                          <span>Đang bị khóa / Chờ duyệt</span>
+                        </>
+                      )}
                     </button>
-                  ))}
+                    {selectedUser.id === currentUser?.id && (
+                      <span className="text-[10px] text-slate-400 font-bold">* Không thể tự thay đổi trạng thái của chính bạn</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">Chọn ảnh đại diện Emoji</label>
+                  <div className="grid grid-cols-7 gap-1.5 max-w-[280px]">
+                    {AVATAR_OPTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => setEditForm(prev => ({ ...prev, avatar: emoji }))}
+                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-base hover:scale-110 active:scale-95 shadow-sm transition-all ${
+                          editForm.avatar === emoji 
+                            ? 'bg-indigo-50 border-indigo-600 scale-105' 
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

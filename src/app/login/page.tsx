@@ -184,7 +184,7 @@ export default function LoginPage() {
           </div>
           <h2 className="text-2xl font-black tracking-wider text-slate-800 uppercase">VIETTYPING</h2>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-            Luyện gõ tiếng việt 10 ngón
+            Luyện gõ tiếng việt 10 ngón tay
           </p>
         </div>
 
@@ -195,11 +195,10 @@ export default function LoginPage() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className={`p-4 rounded-2xl border-2 mb-6 text-xs font-bold flex items-start gap-3 ${
-                message.type === "success"
+              className={`p-4 rounded-2xl border-2 mb-6 text-xs font-bold flex items-start gap-3 ${message.type === "success"
                   ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                   : "bg-rose-50 border-rose-200 text-rose-700"
-              }`}
+                }`}
             >
               <span className="text-base shrink-0">{message.type === "success" ? "✅" : "⚠️"}</span>
               <p className="leading-relaxed">{message.text}</p>
@@ -216,9 +215,8 @@ export default function LoginPage() {
                 setActiveTab("login");
                 setMessage(null);
               }}
-              className={`py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
-                activeTab === "login" ? "bg-white text-sky-600 shadow-md scale-105" : "text-slate-500 hover:text-slate-700"
-              }`}
+              className={`py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${activeTab === "login" ? "bg-white text-sky-600 shadow-md scale-105" : "text-slate-500 hover:text-slate-700"
+                }`}
             >
               Đăng Nhập
             </button>
@@ -228,9 +226,8 @@ export default function LoginPage() {
                 setActiveTab("signup");
                 setMessage(null);
               }}
-              className={`py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
-                activeTab === "signup" ? "bg-white text-sky-600 shadow-md scale-105" : "text-slate-500 hover:text-slate-700"
-              }`}
+              className={`py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${activeTab === "signup" ? "bg-white text-sky-600 shadow-md scale-105" : "text-slate-500 hover:text-slate-700"
+                }`}
             >
               Đăng Ký
             </button>

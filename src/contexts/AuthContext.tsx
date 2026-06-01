@@ -17,6 +17,7 @@ export interface User {
   nickname: string;
   grade: string;
   createdAt: string;
+  googleAvatarUrl?: string;
 }
 
 interface AuthContextType {
@@ -113,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         nickname: profile.nickname || "",
         grade: profile.grade || "Lớp 6",
         createdAt: profile.created_at,
+        googleAvatarUrl: authUser.user_metadata?.avatar_url || authUser.raw_user_meta_data?.avatar_url || undefined,
       };
 
       setUser(formattedUser);
@@ -308,6 +310,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.signOut().then(() => {
       setUser(null);
       clearStudentInfo();
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('viettyping_teacher_authenticated');
+      }
     });
   }, [clearStudentInfo]);
 

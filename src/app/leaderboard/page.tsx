@@ -8,6 +8,8 @@ import { useSound } from '@/contexts/SoundContext';
 import { useStudent } from '@/contexts/StudentContext';
 import { weeklyLeaderboard, allTimeLeaderboard, LeaderboardUser } from '@/data/leaderboard';
 import { Be_Vietnam_Pro } from 'next/font/google';
+import Link from 'next/link';
+import Avatar from '@/components/Avatar';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -184,7 +186,9 @@ export default function LeaderboardPage() {
               transition={{ delay: 0.2 }}
               className="flex flex-col items-center w-24 md:w-32"
             >
-              <div className="text-4xl md:text-5xl animate-bounce mb-2">{secondRank.avatar}</div>
+              <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-slate-100 rounded-full border-4 border-slate-300 shadow-sm overflow-hidden animate-bounce mb-2">
+                <Avatar avatar={secondRank.avatar} className="text-3xl md:text-4xl" imgClassName="w-full h-full" />
+              </div>
               <div className="text-[10px] md:text-xs font-black text-slate-700 text-center truncate w-full mb-1">
                 {secondRank.nickname.split(' ')[0]}
               </div>
@@ -215,7 +219,9 @@ export default function LeaderboardPage() {
               >
                 <Crown className="w-8 h-8 text-yellow-500 fill-yellow-300 stroke-[2px]" />
               </motion.div>
-              <div className="text-5xl md:text-6xl mb-2">{firstRank.avatar}</div>
+              <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center bg-amber-50 rounded-full border-4 border-amber-300 shadow-md overflow-hidden mb-2">
+                <Avatar avatar={firstRank.avatar} className="text-4xl md:text-5xl" imgClassName="w-full h-full" />
+              </div>
               <div className="text-xs md:text-sm font-black text-indigo-950 text-center truncate w-full mb-1">
                 {firstRank.nickname.split(' ')[0]}
               </div>
@@ -238,7 +244,9 @@ export default function LeaderboardPage() {
               transition={{ delay: 0.3 }}
               className="flex flex-col items-center w-24 md:w-32"
             >
-              <div className="text-4xl md:text-5xl animate-bounce mb-2">{thirdRank.avatar}</div>
+              <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-slate-100 rounded-full border-4 border-amber-250/50 shadow-sm overflow-hidden animate-bounce mb-2">
+                <Avatar avatar={thirdRank.avatar} className="text-3xl md:text-4xl" imgClassName="w-full h-full" />
+              </div>
               <div className="text-[10px] md:text-xs font-black text-slate-700 text-center truncate w-full mb-1">
                 {thirdRank.nickname.split(' ')[0]}
               </div>
@@ -283,7 +291,9 @@ export default function LeaderboardPage() {
                   </span>
                   
                   {/* Avatar và Tên */}
-                  <span className="text-2xl">{user.avatar}</span>
+                  <div className="text-2xl bg-slate-100 w-9 h-9 flex items-center justify-center rounded-xl border-2 border-slate-200 overflow-hidden shrink-0">
+                    <Avatar avatar={user.avatar} className="text-2xl" imgClassName="w-full h-full" />
+                  </div>
                   <span className={`text-xs md:text-sm font-black ${isMe ? 'text-indigo-900' : 'text-slate-800'}`}>
                     {isMe ? `${user.nickname} (Con đó!)` : user.nickname}
                   </span>
