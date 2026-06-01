@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Keyboard, Users, BarChart3, Shield, ChevronRight, Zap, Target, Award, GraduationCap, Star, HelpCircle, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSound } from '@/contexts/SoundContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useStudent } from '@/contexts/StudentContext';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -16,6 +17,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 export default function HomePage() {
   const { playSound } = useSound();
   const { user, isLoggedIn, logout } = useAuth();
+  const { isConfigured, setIsOpenConfig } = useStudent();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const toggleFaq = (index: number) => {
@@ -155,16 +157,25 @@ export default function HomePage() {
               </>
             ) : (
               <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-1.5 shadow-sm">
-                <span className="text-lg">{user?.avatar || '👤'}</span>
-                <div className="text-left leading-tight hidden md:block">
-                  <span className="text-xs font-black text-slate-800 block">{user?.name}</span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                    @{user?.nickname} • {user?.role === 'admin' ? 'Quản trị viên' : user?.role === 'teacher' ? 'Giáo viên' : 'Học sinh'}
-                  </span>
-                </div>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setIsOpenConfig(true);
+                  }}
+                  className="flex items-center gap-2 hover:bg-slate-100/80 px-2 py-1 rounded-xl transition-all text-left cursor-pointer"
+                  title="Chỉnh sửa hồ sơ"
+                >
+                  <span className="text-lg">{user?.avatar || '👤'}</span>
+                  <div className="text-left leading-tight hidden md:block">
+                    <span className="text-xs font-black text-slate-800 block hover:text-sky-600 transition-colors">{user?.name}</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                      @{user?.nickname} • {user?.role === 'admin' ? 'Quản trị viên' : user?.role === 'teacher' ? 'Giáo viên' : 'Học sinh'}
+                    </span>
+                  </div>
+                </button>
                 <button
                   onClick={() => { playSound('click'); logout(); }}
-                  className="text-xs font-extrabold text-rose-500 hover:text-rose-700 bg-rose-50 border border-rose-100 hover:bg-rose-100/50 px-3 py-1.5 rounded-xl transition-all"
+                  className="text-xs font-extrabold text-rose-500 hover:text-rose-700 bg-rose-50 border border-rose-100 hover:bg-rose-100/50 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
                 >
                   Đăng xuất
                 </button>
@@ -209,13 +220,26 @@ export default function HomePage() {
               </p>
 
               <div className="flex flex-wrap gap-4">
-                <Link
-                  href="/typing"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-base font-bold rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/35 transition-all active:scale-[0.97] border-2 border-sky-400/30 font-black"
-                >
-                  <Keyboard className="w-5 h-5" />
-                  Bắt đầu luyện tập miễn phí
-                </Link>
+                {isConfigured ? (
+                  <Link
+                    href="/typing"
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-base font-bold rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/35 transition-all active:scale-[0.97] border-2 border-sky-400/30 font-black cursor-pointer"
+                  >
+                    <Keyboard className="w-5 h-5" />
+                    Vào luyện tập ngay
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      setIsOpenConfig(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-base font-bold rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/35 transition-all active:scale-[0.97] border-2 border-sky-400/30 font-black cursor-pointer"
+                  >
+                    <Keyboard className="w-5 h-5" />
+                    Đăng ký trải nghiệm
+                  </button>
+                )}
                 <Link
                   href="/admin"
                   className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-700 text-base font-bold rounded-2xl shadow-md border-2 border-slate-200 hover:border-sky-300 hover:text-sky-600 transition-all active:scale-[0.97]"
