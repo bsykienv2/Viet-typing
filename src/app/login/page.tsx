@@ -42,10 +42,7 @@ export default function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [tempPassword, setTempPassword] = useState<string | null>(null);
 
-  // Google OAuth popup mock states
-  const [showGoogleMock, setShowGoogleMock] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState("");
-  const [googleName, setGoogleName] = useState("");
+
 
   // Redirect if already logged in
   useEffect(() => {
@@ -138,38 +135,21 @@ export default function LoginPage() {
 
   // Forgot password is now handled via admin contact info
 
-  const triggerGoogleLogin = () => {
+  const triggerGoogleLogin = async () => {
     playSound("click");
-    // Show premium Google Auth popup mock
-    setShowGoogleMock(true);
-  };
-
-  const submitGoogleMock = async () => {
-    if (!googleEmail || !googleName) {
-      playSound("error");
-      return;
-    }
-
-    setShowGoogleMock(false);
     setLoading(true);
-    playSound("click");
-
-    // Random avatar for Google signups
-    const avatars = ["🦊", "🦁", "🐰", "🐼", "🐻", "🦄", "🐶", "🐱"];
-    const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
-
+    setMessage(null);
     try {
-      const res = await loginWithGoogle(googleEmail, googleName, randomAvatar);
-      if (res.success) {
-        playSound("tada");
-        // Redirect handled in useEffect
+      const res = await loginWithGoogle();
+      if (!res.success) {
+        playSound("error");
+        setMessage({ type: "error", text: res.error || "Không thể khởi tạo đăng nhập Google." });
       }
     } catch (err) {
       playSound("error");
+      setMessage({ type: "error", text: "Lỗi kết nối khi đăng nhập Google!" });
     } finally {
       setLoading(false);
-      setGoogleEmail("");
-      setGoogleName("");
     }
   };
 
@@ -554,92 +534,7 @@ export default function LoginPage() {
         )}
       </div>
 
-      {/* MOCK GOOGLE AUTH POPUP MODAL */}
-      <AnimatePresence>
-        {showGoogleMock && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-2 border-slate-200 relative"
-            >
-              <div className="text-center mb-6">
-                <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" width="40" height="40">
-                  <g transform="matrix(1, 0, 0, 1, 0, 0)">
-                    <path
-                      d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.58h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.4 21.35,11.1z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12,20.8c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.58c-0.92,0.6 -2.1,0.98 -3.66,0.98 -2.35,0 -4.33,-1.58 -5.04,-3.7H2.54v2.66C4.02,18.88 7.74,20.8 12,20.8z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M6.96,13.3c-0.18,-0.54 -0.28,-1.12 -0.28,-1.7c0,-0.58 0.1,-1.16 0.28,-1.7V7.24H2.54C1.92,8.48 1.56,9.89 1.56,11.6c0,1.71 0.36,3.12 0.98,4.36L6.96,13.3z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12,6.42c1.32,0 2.5,0.46 3.44,1.36l2.58,-2.58C16.46,3.67 14.43,2.8 12,2.8 7.74,2.8 4.02,4.72 2.54,7.24l4.42,3.46c0.71,-2.12 2.69,-3.7 5.04,-3.7z"
-                      fill="#EA4335"
-                    />
-                  </g>
-                </svg>
-                <h3 className="font-extrabold text-slate-800 text-base">Mô phỏng Đăng nhập bằng Google</h3>
-                <p className="text-xs text-slate-400 font-medium mt-1">
-                  Nhập thông tin tài khoản Google của bạn để liên kết nhanh.
-                </p>
-              </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Tên Google của bạn</label>
-                  <input
-                    type="text"
-                    required
-                    value={googleName}
-                    onChange={(e) => setGoogleName(e.target.value)}
-                    placeholder="Nguyễn Thành Công"
-                    className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-200 focus:border-sky-400 rounded-xl text-xs font-bold text-slate-700 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Địa chỉ Email Google</label>
-                  <input
-                    type="email"
-                    required
-                    value={googleEmail}
-                    onChange={(e) => setGoogleEmail(e.target.value)}
-                    placeholder="congnguyen@gmail.com"
-                    className="w-full px-4 py-2.5 bg-slate-50 border-2 border-slate-200 focus:border-sky-400 rounded-xl text-xs font-bold text-slate-700 outline-none"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      playSound("click");
-                      setShowGoogleMock(false);
-                    }}
-                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold"
-                  >
-                    Hủy bỏ
-                  </button>
-                  <button
-                    type="button"
-                    onClick={submitGoogleMock}
-                    className="flex-1 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-black shadow-md"
-                  >
-                    Chọn tài khoản
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

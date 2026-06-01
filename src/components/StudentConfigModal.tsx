@@ -242,7 +242,7 @@ export default function StudentConfigModal() {
     setGrade(selectedGrade);
   };
 
-  const canClose = isConfigured;
+  const canClose = isConfigured || !isLoggedIn;
 
   if (!isLoaded || !isOpenConfig || (pathname && pathname.startsWith('/admin'))) return null;
 

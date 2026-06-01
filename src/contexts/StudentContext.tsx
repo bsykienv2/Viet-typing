@@ -7,6 +7,7 @@ export interface StudentInfo {
   nickname: string;  // Biệt danh / Tên gọi yêu thích
   grade: string;     // Lớp học (ví dụ: Lớp 1, Lớp 2...)
   avatar: string;    // Emoji avatar (ví dụ: 🦁)
+  xp?: number;       // Tích lũy XP
 }
 
 interface StudentContextType {

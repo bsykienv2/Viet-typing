@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-type SoundType = 'correct' | 'wrong' | 'click' | 'complete' | 'tick' | 'tada';
+type SoundType = 'correct' | 'wrong' | 'click' | 'complete' | 'tick' | 'tada' | 'error' | 'success';
 
 interface SoundContextType {
   isMuted: boolean;
@@ -65,6 +65,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         break;
       }
 
+      case 'error':
       case 'wrong': {
         // Low pitch "buzz"
         const osc = audioContext.createOscillator();
@@ -102,6 +103,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         break;
       }
 
+      case 'success':
       case 'complete': {
         // Simple fanfare
         const playNote = (freq: number, startTime: number, duration: number) => {

@@ -101,6 +101,7 @@ Truy cập **SQL Editor** trên Supabase Dashboard và chạy đoạn lệnh SQL
 CREATE TABLE public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   name TEXT NOT NULL,
+  email TEXT,
   phone TEXT,
   nickname TEXT,
   grade TEXT DEFAULT 'Lớp 6',
@@ -151,10 +152,11 @@ BEGIN
   END IF;
 
   -- Ghi thông tin tài khoản Google vào bảng profiles
-  INSERT INTO public.profiles (id, name, phone, nickname, grade, role, auth_type, is_active, avatar)
+  INSERT INTO public.profiles (id, name, email, phone, nickname, grade, role, auth_type, is_active, avatar)
   VALUES (
     NEW.id,
     v_name,
+    NEW.email,
     '', -- Tài khoản google không có sẵn số điện thoại
     split_part(NEW.email, '@', 1), -- Biệt danh mặc định lấy từ phần trước @ của email
     'Lớp 6',

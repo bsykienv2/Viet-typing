@@ -10,6 +10,7 @@ import { TelemetryPayload } from '@/types/lesson';
 import { Be_Vietnam_Pro } from 'next/font/google';
 import { useStudent } from '@/contexts/StudentContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -31,7 +32,7 @@ interface Stats {
 export default function LessonPage({ params }: Props) {
   const router = useRouter();
   const { isConfigured } = useStudent();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [resetKey, setResetKey] = useState(0);
@@ -103,8 +104,8 @@ export default function LessonPage({ params }: Props) {
       console.error(err);
     }
 
-    // Only save progress and add XP/Streak if teacher rules are met AND user is logged in
-    if (meetsRequirements && isLoggedIn) {
+    // Save progress to local storage (both guests and logged-in users)
+    if (meetsRequirements) {
       try {
         // 1. Lưu danh sách bài học đã hoàn thành
         const completedList = JSON.parse(localStorage.getItem('typing_completed_lessons') || '[]');
@@ -124,8 +125,60 @@ export default function LessonPage({ params }: Props) {
       } catch (err) {
         console.error('Failed to save typing progress to localStorage:', err);
       }
+
+      // Sync to database and Google Sheets if logged in
+      if (isLoggedIn && user) {
+        (async () => {
+          try {
+            const { error } = await supabase
+              .from('typing_telemetry')
+              .insert([
+                {
+                  student_id: user.id,
+                  lesson_id: resolvedParams.lessonId,
+                  wpm: newStats.wpm,
+                  accuracy: newStats.accuracy,
+                  incorrect_count: newStats.incorrectCount,
+                  meets_requirements: meetsRequirements
+                }
+              ]);
+            if (error) {
+              console.error('Lỗi khi lưu kết quả gõ vào Supabase:', error.message);
+            } else {
+              console.log('Đã lưu kết quả gõ vào Supabase thành công!');
+            }
+          } catch (dbErr) {
+            console.error('Lỗi kết nối Supabase:', dbErr);
+          }
+
+          const GOOGLE_SCRIPT_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL;
+          if (GOOGLE_SCRIPT_URL) {
+            try {
+              await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  studentName: user.name,
+                  className: user.grade || "Tự do",
+                  lessonTitle: lesson.title || "Bài tập gõ",
+                  wpm: newStats.wpm,
+                  accuracy: newStats.accuracy,
+                  incorrectCount: newStats.incorrectCount,
+                  meetsRequirements: meetsRequirements
+                })
+              });
+              console.log("Đã gửi dữ liệu đồng bộ sang Google Sheets!");
+            } catch (sheetErr) {
+              console.error("Lỗi đồng bộ Google Sheets:", sheetErr);
+            }
+          }
+        })();
+      }
     }
-  }, [resolvedParams.lessonId, isLoggedIn]);
+  }, [resolvedParams.lessonId, isLoggedIn, user, lesson.title]);
 
   const getNextLesson = useCallback(() => {
     const currentIndex = lessons.findIndex((l) => l.id === lesson.id);
