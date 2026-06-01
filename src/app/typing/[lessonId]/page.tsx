@@ -9,6 +9,7 @@ import { IoArrowBack, IoArrowForward } from 'react-icons/io5';
 import { TelemetryPayload } from '@/types/lesson';
 import { Be_Vietnam_Pro } from 'next/font/google';
 import { useStudent } from '@/contexts/StudentContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -30,6 +31,7 @@ interface Stats {
 export default function LessonPage({ params }: Props) {
   const router = useRouter();
   const { isConfigured } = useStudent();
+  const { isLoggedIn } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [resetKey, setResetKey] = useState(0);
@@ -55,10 +57,10 @@ export default function LessonPage({ params }: Props) {
 
   // Enforce registration check
   useEffect(() => {
-    if (lessonIndexInLevel >= 3 && !isConfigured) {
+    if (lessonIndexInLevel >= 3 && !isLoggedIn) {
       router.replace('/typing?triggerRegister=true');
     }
-  }, [lessonIndexInLevel, isConfigured, router]);
+  }, [lessonIndexInLevel, isLoggedIn, router]);
 
   // Load teacher requirements from localStorage on mount
   useEffect(() => {
@@ -101,8 +103,8 @@ export default function LessonPage({ params }: Props) {
       console.error(err);
     }
 
-    // Only save progress and add XP/Streak if teacher rules are met
-    if (meetsRequirements) {
+    // Only save progress and add XP/Streak if teacher rules are met AND user is logged in
+    if (meetsRequirements && isLoggedIn) {
       try {
         // 1. Lưu danh sách bài học đã hoàn thành
         const completedList = JSON.parse(localStorage.getItem('typing_completed_lessons') || '[]');
@@ -123,7 +125,7 @@ export default function LessonPage({ params }: Props) {
         console.error('Failed to save typing progress to localStorage:', err);
       }
     }
-  }, [resolvedParams.lessonId]);
+  }, [resolvedParams.lessonId, isLoggedIn]);
 
   const getNextLesson = useCallback(() => {
     const currentIndex = lessons.findIndex((l) => l.id === lesson.id);

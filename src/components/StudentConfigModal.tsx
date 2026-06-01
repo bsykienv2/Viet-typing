@@ -55,7 +55,7 @@ export default function StudentConfigModal() {
 
   // Check if normal user has been activated by admin to edit their profile
   const isNormalUser = isLoggedIn && user?.authType === "normal";
-  const isNormalAndNotActivated = isNormalUser && user?.isActivated !== true;
+  const isNormalAndNotActivated = isNormalUser && user?.isActive !== true;
   const canEdit = !isNormalAndNotActivated;
 
   // Sync profile details when opening modal or user changing
@@ -95,13 +95,6 @@ export default function StudentConfigModal() {
   }, [studentInfo, user, isOpenConfig]);
 
   const pathname = usePathname();
-
-  // Auto-open if student profile is not configured on non-admin page (excluding the homepage '/')
-  useEffect(() => {
-    if (isLoaded && !isConfigured && pathname && pathname !== '/' && !pathname.startsWith('/admin') && pathname !== '/login') {
-      setIsOpenConfig(true);
-    }
-  }, [isLoaded, isConfigured, pathname, setIsOpenConfig]);
 
   // Auto-sync logged-in user profile with studentInfo if they differ
   useEffect(() => {

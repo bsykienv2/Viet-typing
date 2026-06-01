@@ -586,7 +586,7 @@ export default function TypingPage() {
                     const isLockedByProgress = !isUnlockFree && !isCompleted && !isNext && completedLessons.length < lessons.findIndex(l => l.id === lesson.id);
 
                     // Giới hạn 3 bài học cho học sinh chưa đăng ký
-                    const isUnregisteredLimit = index >= 3 && !isConfigured;
+                    const isUnregisteredLimit = index >= 3 && !isLoggedIn;
 
                     // Bài bị khóa nếu thỏa 1 trong 2 điều kiện khóa
                     const isLocked = isLockedByProgress || isUnregisteredLimit;

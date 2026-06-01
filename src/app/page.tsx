@@ -127,7 +127,7 @@ export default function HomePage() {
               href="/typing"
               className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-sky-600 transition-colors"
             >
-              Bài Học
+              {isLoggedIn ? 'Bài học' : 'Thử trải nghiệm'}
             </Link>
 
             {isLoggedIn && (user?.role === 'admin' || user?.role === 'teacher') && (
