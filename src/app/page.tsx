@@ -6,6 +6,7 @@ import { Be_Vietnam_Pro } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Keyboard, Users, BarChart3, Shield, ChevronRight, Zap, Target, Award, GraduationCap, Star, HelpCircle, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSound } from '@/contexts/SoundContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -14,6 +15,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 
 export default function HomePage() {
   const { playSound } = useSound();
+  const { user, isLoggedIn, logout } = useAuth();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const toggleFaq = (index: number) => {
@@ -125,19 +127,49 @@ export default function HomePage() {
             >
               Bài Học
             </Link>
-            <Link
-              href="/admin"
-              className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-sky-600 transition-colors"
-            >
-              Giáo Viên
-            </Link>
-            <Link
-              href="/typing"
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-sm font-bold rounded-xl shadow-md shadow-sky-500/20 hover:shadow-lg hover:shadow-sky-500/30 transition-all active:scale-95"
-            >
-              Bắt đầu luyện tập
-              <ChevronRight className="w-4 h-4" />
-            </Link>
+
+            {isLoggedIn && (user?.role === 'admin' || user?.role === 'teacher') && (
+              <Link
+                href="/admin"
+                className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+              >
+                Giáo Viên
+              </Link>
+            )}
+
+            {!isLoggedIn ? (
+              <>
+                <Link
+                  href="/login"
+                  className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-sky-600 hover:bg-slate-50 rounded-xl transition-all border border-slate-200 hover:border-sky-300"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href="/login?tab=signup"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-sm font-bold rounded-xl shadow-md shadow-sky-500/20 hover:shadow-lg hover:shadow-sky-500/30 transition-all active:scale-95"
+                >
+                  Đăng ký
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </>
+            ) : (
+              <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-1.5 shadow-sm">
+                <span className="text-lg">{user?.avatar || '👤'}</span>
+                <div className="text-left leading-tight hidden md:block">
+                  <span className="text-xs font-black text-slate-800 block">{user?.name}</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                    @{user?.nickname} • {user?.role === 'admin' ? 'Quản trị viên' : user?.role === 'teacher' ? 'Giáo viên' : 'Học sinh'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => { playSound('click'); logout(); }}
+                  className="text-xs font-extrabold text-rose-500 hover:text-rose-700 bg-rose-50 border border-rose-100 hover:bg-rose-100/50 px-3 py-1.5 rounded-xl transition-all"
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>

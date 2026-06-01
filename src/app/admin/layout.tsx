@@ -14,7 +14,8 @@ import {
   Calendar, 
   ArrowLeft,
   Keyboard,
-  ShieldCheck
+  ShieldCheck,
+  UserCog
 } from 'lucide-react';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -36,6 +37,12 @@ export default function AdminLayout({
       href: '/admin',
       icon: LayoutDashboard,
       color: 'text-sky-500',
+    },
+    {
+      name: 'Quản lý tài khoản',
+      href: '/admin/users',
+      icon: UserCog,
+      color: 'text-indigo-600',
     },
     {
       name: 'Quản lý lớp học',

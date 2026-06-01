@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSound } from '@/contexts/SoundContext';
 import { useStudent } from '@/contexts/StudentContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Be_Vietnam_Pro } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, Check, Keyboard, Home, GraduationCap, Lock, Trophy, Flame } from 'lucide-react';
+import { RotateCcw, Check, Keyboard, Home, GraduationCap, Lock, Trophy, Flame, HelpCircle, User, Sparkles, Star } from 'lucide-react';
+import SpinWheelGame from '@/components/SpinWheelGame';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
@@ -83,10 +85,16 @@ const mockLeaderboard: LeaderboardEntry[] = [
   { rank: 20, name: "Bảo Châu", avatar: "🐼", grade: "Lớp 9B", xp: 4500, wpm: 39 },
 ];
 
+const spinConfig = {
+  id: 'viettyping-lucky-spin',
+  items: ['10 XP 🌟', 'Kẹo dẻo 🍬', '20 XP 🔥', 'Huy hiệu 🏅', 'Mũ học sinh 🎓', 'Ngôi sao 🌟', 'Trái tim ❤️', 'Cố lên 💪']
+};
+
 export default function TypingPage() {
   const router = useRouter();
   const { playSound } = useSound();
-  const { isConfigured, setIsOpenConfig } = useStudent();
+  const { isConfigured, setIsOpenConfig, studentInfo, updateStudentInfo } = useStudent();
+  const { isLoggedIn, user } = useAuth();
   
   // States cho gamification
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
@@ -95,6 +103,14 @@ export default function TypingPage() {
   const [activeTab, setActiveTab] = useState<'basic' | 'intermediate' | 'advanced'>('basic');
   const [hoveredLessonId, setHoveredLessonId] = useState<string | null>(null);
   const [adminRules, setAdminRules] = useState<{ unlockRule: 'linear' | 'free'; forceLayout: 'both' | 'telex' | 'vni' } | null>(null);
+
+  // States quản lý vai trò và bảo mật giáo viên
+  const [userRole, setUserRole] = useState<'student' | 'teacher'>('student');
+  const [isTeacherVerified, setIsTeacherVerified] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [teacherPassword, setTeacherPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [showSpinWheel, setShowSpinWheel] = useState(false);
 
   // Đọc dữ liệu từ localStorage sau khi component mount
   useEffect(() => {
@@ -111,6 +127,13 @@ export default function TypingPage() {
       if (savedRules) {
         setAdminRules(JSON.parse(savedRules));
       }
+
+      // Check trạng thái xác thực giáo viên trong session
+      const teacherAuth = sessionStorage.getItem('viettyping_teacher_authenticated');
+      if (teacherAuth === 'true') {
+        setIsTeacherVerified(true);
+        setUserRole('teacher');
+      }
     } catch (e) {
       console.error('Failed to load typing progress:', e);
     }
@@ -126,6 +149,48 @@ export default function TypingPage() {
       }
     }
   }, [setIsOpenConfig]);
+
+  // Tự động gán quyền giáo viên nếu tài khoản đã đăng nhập có vai trò admin/teacher
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      if (user.role === 'admin' || user.role === 'teacher') {
+        setIsTeacherVerified(true);
+        setUserRole('teacher');
+      } else {
+        setUserRole('student');
+      }
+    }
+  }, [isLoggedIn, user]);
+
+  const handleRoleChange = (role: 'student' | 'teacher') => {
+    playSound('click');
+    if (role === 'student') {
+      setUserRole('student');
+    } else {
+      if (isTeacherVerified || (isLoggedIn && user && (user.role === 'admin' || user.role === 'teacher'))) {
+        setIsTeacherVerified(true);
+        setUserRole('teacher');
+      } else {
+        setShowPasswordModal(true);
+      }
+    }
+  };
+
+  const handleVerifyTeacher = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (teacherPassword === 'viettyping2026') {
+      setIsTeacherVerified(true);
+      setUserRole('teacher');
+      sessionStorage.setItem('viettyping_teacher_authenticated', 'true');
+      setShowPasswordModal(false);
+      setTeacherPassword('');
+      setPasswordError('');
+      playSound('tada');
+    } else {
+      setPasswordError('Mật khẩu không chính xác. Vui lòng thử lại!');
+      playSound('error');
+    }
+  };
 
   const getLessonsForLevel = (level: string) => {
     return lessons.filter(lesson => lesson.level === level);
@@ -195,36 +260,112 @@ export default function TypingPage() {
       <div className="max-w-[1500px] mx-auto px-6 py-8 relative z-10">
         
         {/* Header Navigation */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col xl:flex-row justify-between items-center gap-4 mb-8 bg-white p-4 rounded-3xl border-2 border-slate-200 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
             <Link
               href="/"
               onClick={() => playSound('click')}
-              className="flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-800 rounded-xl font-bold border-2 border-slate-200 transition-all shadow-sm cursor-pointer"
+              className="flex items-center gap-2 px-5 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 rounded-xl font-bold border-2 border-slate-200 transition-all shadow-sm cursor-pointer"
             >
               <Home className="w-5 h-5 text-sky-500" />
               <span>Trang chủ</span>
             </Link>
             <button
               disabled
-              className="flex items-center gap-2 px-5 py-3 bg-sky-50 text-sky-700 rounded-xl font-bold border-2 border-sky-200 shadow-sm cursor-default"
+              className="flex items-center gap-2 px-5 py-3 bg-sky-50 text-sky-700 rounded-xl font-extrabold border-2 border-sky-200 shadow-sm cursor-default"
             >
               <Keyboard className="w-5 h-5" />
-              <span>⌨️ Luyện gõ phím</span>
+              <span>Luyện gõ</span>
             </button>
-            <Link
-              href="/admin"
-              onClick={() => playSound('click')}
-              className="flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-100 text-amber-600 hover:text-amber-700 rounded-xl font-bold border-2 border-slate-200 transition-all shadow-sm sm:ml-auto cursor-pointer"
-            >
-              <GraduationCap className="w-5 h-5" />
-              Giáo viên
-            </Link>
+
+            {/* Menu Học sinh */}
+            {userRole === 'student' && (
+              <>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setShowSpinWheel(true);
+                  }}
+                  className="flex items-center gap-2 px-5 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-extrabold border-2 border-indigo-200 transition-all cursor-pointer shadow-sm"
+                >
+                  <span className="text-lg">🎡</span>
+                  <span>Vòng quay may mắn</span>
+                </button>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setIsOpenConfig(true);
+                  }}
+                  className="flex items-center gap-2 px-5 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl font-extrabold border-2 border-emerald-200 transition-all cursor-pointer shadow-sm"
+                >
+                  <span className="text-lg">👤</span>
+                  <span>{studentInfo?.nickname ? `Em: ${studentInfo.nickname}` : 'Hồ sơ của em'}</span>
+                </button>
+              </>
+            )}
+
+            {/* Menu Giáo viên */}
+            {userRole === 'teacher' && (
+              <>
+                <Link
+                  href="/admin"
+                  onClick={() => playSound('click')}
+                  className="flex items-center gap-2 px-5 py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl font-extrabold border-2 border-amber-200 transition-all cursor-pointer shadow-sm"
+                >
+                  <span>📊</span>
+                  <span>Bảng điều khiển</span>
+                </Link>
+                <Link
+                  href="/admin/assignments"
+                  onClick={() => playSound('click')}
+                  className="flex items-center gap-2 px-5 py-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl font-extrabold border-2 border-purple-200 transition-all cursor-pointer shadow-sm"
+                >
+                  <span>⚙️</span>
+                  <span>Thiết lập luật chơi</span>
+                </Link>
+                <Link
+                  href="/admin/classes"
+                  onClick={() => playSound('click')}
+                  className="flex items-center gap-2 px-5 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl font-extrabold border-2 border-rose-200 transition-all cursor-pointer shadow-sm"
+                >
+                  <span>👥</span>
+                  <span>Quản lý học sinh</span>
+                </Link>
+              </>
+            )}
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 tracking-wider">
-            ⌨️ LUYỆN GÕ PHÍM
-          </h1>
+          <div className="flex items-center gap-6 w-full xl:w-auto justify-between xl:justify-end border-t xl:border-t-0 pt-4 xl:pt-0">
+            <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 tracking-wider uppercase">
+              VietTyping
+            </h1>
+
+            {/* Role Switcher */}
+            <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 border border-slate-200 shadow-inner shrink-0">
+              <button
+                onClick={() => handleRoleChange('student')}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  userRole === 'student'
+                    ? 'bg-white text-sky-600 shadow-md scale-105'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <span>🧒</span>
+                <span>Học sinh</span>
+              </button>
+              <button
+                onClick={() => handleRoleChange('teacher')}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  userRole === 'teacher'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md scale-105'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <span>👨‍🏫</span>
+                <span>Giáo viên</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Banners for Forced Layouts */}
@@ -248,8 +389,8 @@ export default function TypingPage() {
         {/* Grid chia 2 cột chính */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-4">
           
-          {/* CỘT TRÁI: Bảng xếp hạng Top 20 (chiếm 3 cột trên lg) */}
-          <div className="lg:col-span-3 bg-white rounded-3xl border-2 border-slate-200 p-5 shadow-sm lg:sticky lg:top-24 max-h-[82vh] flex flex-col">
+          {/* CỘT PHẢI: Bảng xếp hạng Top 20 (chiếm 3 cột trên lg, hiển thị bên phải nhờ lg:order-2) */}
+          <div className="lg:col-span-3 order-2 lg:order-2 bg-white rounded-3xl border-2 border-slate-200 p-5 shadow-sm lg:sticky lg:top-24 max-h-[82vh] flex flex-col">
             <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-slate-100 shrink-0">
               <Trophy className="w-6 h-6 text-amber-500 fill-amber-500" />
               <h2 className="text-lg font-black text-slate-800">Top 20 Cao Thủ</h2>
@@ -258,46 +399,58 @@ export default function TypingPage() {
             {/* List học sinh scrollable */}
             <div className="overflow-y-auto flex-1 pr-1 space-y-2.5 custom-scrollbar">
               {mockLeaderboard.map((student) => {
-                let rankBg = 'bg-slate-50 border-slate-200';
+                let rankBg = 'bg-slate-50/60 border-slate-200/80 hover:bg-slate-50';
                 let rankTextColor = 'text-slate-500';
+                let badge = null;
+                let shineEffect = '';
+
                 if (student.rank === 1) {
-                  rankBg = 'bg-amber-50 border-amber-200 ring-2 ring-amber-400/30';
-                  rankTextColor = 'text-amber-600';
+                  rankBg = 'bg-gradient-to-r from-yellow-100 via-amber-50 to-yellow-100 border-yellow-400 ring-2 ring-yellow-400/35 hover:from-yellow-200/80 hover:to-yellow-200/80 shadow-md';
+                  rankTextColor = 'text-yellow-700 font-extrabold';
+                  badge = <span className="text-lg shrink-0">🥇</span>;
+                  shineEffect = 'animate-pulse';
                 } else if (student.rank === 2) {
-                  rankBg = 'bg-slate-100 border-slate-300 ring-2 ring-slate-400/20';
-                  rankTextColor = 'text-slate-600';
+                  rankBg = 'bg-gradient-to-r from-slate-100 via-zinc-50 to-slate-100 border-slate-300 ring-2 ring-slate-400/25 hover:from-slate-200 hover:to-slate-200 shadow-sm';
+                  rankTextColor = 'text-slate-700 font-extrabold';
+                  badge = <span className="text-lg shrink-0">🥈</span>;
                 } else if (student.rank === 3) {
-                  rankBg = 'bg-orange-50 border-orange-200 ring-2 ring-orange-400/20';
-                  rankTextColor = 'text-orange-600';
+                  rankBg = 'bg-gradient-to-r from-orange-100 via-amber-50 to-orange-100 border-orange-300 ring-2 ring-orange-400/25 hover:from-orange-200 hover:to-orange-200 shadow-sm';
+                  rankTextColor = 'text-orange-700 font-extrabold';
+                  badge = <span className="text-lg shrink-0">🥉</span>;
                 }
 
                 return (
                   <div
                     key={student.rank}
-                    className={`flex items-center gap-2.5 p-3 rounded-2xl border-2 transition-all hover:translate-x-1 ${rankBg}`}
+                    className={`flex items-center gap-2.5 p-3 rounded-2xl border-2 transition-all hover:scale-[1.02] hover:-translate-y-0.5 duration-200 ${rankBg} ${shineEffect}`}
                   >
-                    {/* Rank number */}
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${rankTextColor} bg-white border border-slate-200 shadow-sm`}>
-                      {student.rank}
-                    </div>
+                    {/* Rank number or Badge */}
+                    {badge ? (
+                      badge
+                    ) : (
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 text-slate-500 bg-white border border-slate-200 shadow-sm">
+                        {student.rank}
+                      </div>
+                    )}
 
                     {/* Avatar Emoji */}
-                    <span className="text-2xl">{student.avatar}</span>
+                    <span className="text-2xl shrink-0 filter drop-shadow-sm">{student.avatar}</span>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="font-extrabold text-sm text-slate-800 truncate leading-tight">
+                      <div className="font-extrabold text-sm text-slate-800 truncate leading-tight flex items-center gap-1">
                         {student.name}
+                        {student.rank === 1 && <span className="text-[10px] bg-yellow-500 text-white font-black px-1 py-0.2 rounded uppercase tracking-widest shrink-0 scale-90">TOP 1</span>}
                       </div>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                      <div className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mt-0.5">
                         {student.grade}
                       </div>
                     </div>
 
                     {/* XP & WPM */}
                     <div className="text-right shrink-0">
-                      <div className="font-black text-xs text-sky-600">{student.xp} XP</div>
-                      <div className="text-[10px] font-bold text-emerald-500">{student.wpm} WPM</div>
+                      <div className="font-black text-xs text-sky-600">{student.xp.toLocaleString()} XP</div>
+                      <div className="text-[9px] font-extrabold text-emerald-500 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-lg mt-0.5 inline-block">{student.wpm} WPM</div>
                     </div>
                   </div>
                 );
@@ -305,8 +458,8 @@ export default function TypingPage() {
             </div>
           </div>
 
-          {/* CỘT PHẢI: Dashboard và danh sách bài học (chiếm 9 cột trên lg) */}
-          <div className="lg:col-span-9 space-y-6">
+          {/* CỘT TRÁI: Dashboard và danh sách bài học (chiếm 9 cột trên lg, hiển thị bên trái nhờ lg:order-1) */}
+          <div className="lg:col-span-9 order-1 lg:order-1 space-y-6">
             
             {/* Dashboard Thành Tích */}
             <div className="bg-white rounded-3xl p-6 border-2 border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
@@ -542,6 +695,134 @@ export default function TypingPage() {
           </div>
         </div>
       </div>
+
+      {/* Vòng quay may mắn Modal */}
+      <AnimatePresence>
+        {showSpinWheel && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border-2 border-indigo-100"
+            >
+              <button 
+                onClick={() => setShowSpinWheel(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-extrabold text-xl p-2 rounded-full hover:bg-slate-100 transition-colors z-10"
+              >
+                ✕
+              </button>
+              <div className="text-center mb-4">
+                <span className="text-4xl">🎡</span>
+                <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-600 mt-2">
+                  Vòng Quay May Mắn
+                </h2>
+                <p className="text-sm text-slate-500 font-bold">Quay thưởng để tích lũy XP và phần quà hấp dẫn!</p>
+              </div>
+
+              <div className="flex justify-center my-4 overflow-hidden rounded-2xl bg-indigo-50/50 p-4 border border-indigo-100/50 animate-fade-in">
+                <SpinWheelGame 
+                  gameConfig={spinConfig}
+                  onComplete={(telemetry) => {
+                    console.log('Spin telemetry:', telemetry);
+                    const match = telemetry.score || 10;
+                    const newXp = xp + match;
+                    setXp(newXp);
+                    localStorage.setItem('typing_xp', newXp.toString());
+                    
+                    if (studentInfo && studentInfo.nickname) {
+                      updateStudentInfo({
+                        ...studentInfo,
+                        xp: (studentInfo.xp || 0) + match
+                      });
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => setShowSpinWheel(false)}
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
+                >
+                  Đóng vòng quay
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Xác thực Giáo viên Mật khẩu Modal */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border-2 border-amber-100"
+            >
+              <button 
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setTeacherPassword('');
+                  setPasswordError('');
+                }}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-xl p-2 rounded-full hover:bg-slate-100 transition-colors"
+              >
+                ✕
+              </button>
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-amber-50 border-2 border-amber-200 rounded-full flex items-center justify-center mx-auto text-3xl">
+                  🔒
+                </div>
+                <h2 className="text-2xl font-black text-slate-800 mt-3">Xác Thực Giáo Viên</h2>
+                <p className="text-sm text-slate-500 font-bold mt-1">Vui lòng nhập mật khẩu quản trị để tiếp tục.</p>
+              </div>
+
+              <form onSubmit={handleVerifyTeacher} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Mật khẩu</label>
+                  <input
+                    type="password"
+                    value={teacherPassword}
+                    onChange={(e) => setTeacherPassword(e.target.value)}
+                    placeholder="Nhập mật khẩu..."
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-amber-400 focus:outline-none font-bold text-lg text-center tracking-widest transition-all"
+                    autoFocus
+                  />
+                  {passwordError && (
+                    <p className="text-red-500 text-xs font-bold mt-2 flex items-center gap-1">
+                      <span>⚠️</span> {passwordError}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setTeacherPassword('');
+                      setPasswordError('');
+                    }}
+                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-all"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-black shadow-md hover:shadow-lg transition-all"
+                  >
+                    Xác nhận
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro } from 'next/font/google'
 import './globals.css'
 import { SoundProvider } from '@/contexts/SoundContext'
 import { StudentProvider } from '@/contexts/StudentContext'
+import { AuthProvider } from '@/contexts/AuthContext'
 import StudentConfigModal from '@/components/StudentConfigModal'
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -27,8 +28,10 @@ export default function RootLayout({
       <body className={beVietnamPro.className}>
         <SoundProvider>
           <StudentProvider>
-            {children}
-            <StudentConfigModal />
+            <AuthProvider>
+              {children}
+              <StudentConfigModal />
+            </AuthProvider>
           </StudentProvider>
         </SoundProvider>
       </body>
