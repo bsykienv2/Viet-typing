@@ -310,9 +310,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.signOut().then(() => {
       setUser(null);
       clearStudentInfo();
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('viettyping_teacher_authenticated');
-      }
     });
   }, [clearStudentInfo]);
 

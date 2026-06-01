@@ -105,12 +105,8 @@ export default function TypingPage() {
   const [hoveredLessonId, setHoveredLessonId] = useState<string | null>(null);
   const [adminRules, setAdminRules] = useState<{ unlockRule: 'linear' | 'free'; forceLayout: 'both' | 'telex' | 'vni' } | null>(null);
 
-  // States quản lý vai trò và bảo mật giáo viên
+  // States quản lý vai trò giáo viên
   const [userRole, setUserRole] = useState<'student' | 'teacher'>('student');
-  const [isTeacherVerified, setIsTeacherVerified] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [teacherPassword, setTeacherPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [showSpinWheel, setShowSpinWheel] = useState(false);
 
   // Đọc dữ liệu từ localStorage sau khi component mount
@@ -127,13 +123,6 @@ export default function TypingPage() {
       const savedRules = localStorage.getItem('viettyping_admin_rules');
       if (savedRules) {
         setAdminRules(JSON.parse(savedRules));
-      }
-
-      // Check trạng thái xác thực giáo viên trong session
-      const teacherAuth = sessionStorage.getItem('viettyping_teacher_authenticated');
-      if (teacherAuth === 'true') {
-        setIsTeacherVerified(true);
-        setUserRole('teacher');
       }
     } catch (e) {
       console.error('Failed to load typing progress:', e);
@@ -153,24 +142,10 @@ export default function TypingPage() {
 
   // Tự động gán quyền giáo viên nếu tài khoản đã đăng nhập có vai trò admin/teacher
   useEffect(() => {
-    if (isLoggedIn && user) {
-      if (user.role === 'admin' || user.role === 'teacher') {
-        setIsTeacherVerified(true);
-        setUserRole('teacher');
-      } else {
-        setIsTeacherVerified(false);
-        setUserRole('student');
-      }
+    if (isLoggedIn && user && (user.role === 'admin' || user.role === 'teacher')) {
+      setUserRole('teacher');
     } else {
-      // Khi không đăng nhập hoặc đăng xuất
-      const teacherAuth = typeof window !== 'undefined' ? sessionStorage.getItem('viettyping_teacher_authenticated') : null;
-      if (teacherAuth === 'true') {
-        setIsTeacherVerified(true);
-        setUserRole('teacher');
-      } else {
-        setIsTeacherVerified(false);
-        setUserRole('student');
-      }
+      setUserRole('student');
     }
   }, [isLoggedIn, user]);
 
@@ -179,28 +154,11 @@ export default function TypingPage() {
     if (role === 'student') {
       setUserRole('student');
     } else {
-      if (isTeacherVerified || (isLoggedIn && user && (user.role === 'admin' || user.role === 'teacher'))) {
-        setIsTeacherVerified(true);
+      if (isLoggedIn && user && (user.role === 'admin' || user.role === 'teacher')) {
         setUserRole('teacher');
       } else {
-        setShowPasswordModal(true);
+        router.push('/login');
       }
-    }
-  };
-
-  const handleVerifyTeacher = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (teacherPassword === 'viettyping2026') {
-      setIsTeacherVerified(true);
-      setUserRole('teacher');
-      sessionStorage.setItem('viettyping_teacher_authenticated', 'true');
-      setShowPasswordModal(false);
-      setTeacherPassword('');
-      setPasswordError('');
-      playSound('tada');
-    } else {
-      setPasswordError('Mật khẩu không chính xác. Vui lòng thử lại!');
-      playSound('error');
     }
   };
 
@@ -760,77 +718,6 @@ export default function TypingPage() {
                   Đóng vòng quay
                 </button>
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Xác thực Giáo viên Mật khẩu Modal */}
-      <AnimatePresence>
-        {showPasswordModal && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border-2 border-amber-100"
-            >
-              <button 
-                onClick={() => {
-                  setShowPasswordModal(false);
-                  setTeacherPassword('');
-                  setPasswordError('');
-                }}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-xl p-2 rounded-full hover:bg-slate-100 transition-colors"
-              >
-                ✕
-              </button>
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-amber-50 border-2 border-amber-200 rounded-full flex items-center justify-center mx-auto text-3xl">
-                  🔒
-                </div>
-                <h2 className="text-2xl font-black text-slate-800 mt-3">Xác Thực Giáo Viên</h2>
-                <p className="text-sm text-slate-500 font-bold mt-1">Vui lòng nhập mật khẩu quản trị để tiếp tục.</p>
-              </div>
-
-              <form onSubmit={handleVerifyTeacher} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Mật khẩu</label>
-                  <input
-                    type="password"
-                    value={teacherPassword}
-                    onChange={(e) => setTeacherPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu..."
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-amber-400 focus:outline-none font-bold text-lg text-center tracking-widest transition-all"
-                    autoFocus
-                  />
-                  {passwordError && (
-                    <p className="text-red-500 text-xs font-bold mt-2 flex items-center gap-1">
-                      <span>⚠️</span> {passwordError}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPasswordModal(false);
-                      setTeacherPassword('');
-                      setPasswordError('');
-                    }}
-                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-all"
-                  >
-                    Hủy bỏ
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-black shadow-md hover:shadow-lg transition-all"
-                  >
-                    Xác nhận
-                  </button>
-                </div>
-              </form>
             </motion.div>
           </div>
         )}
