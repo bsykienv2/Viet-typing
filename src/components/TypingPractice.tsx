@@ -21,8 +21,18 @@ interface Props {
 }
 
 export default function TypingPractice({ task, onComplete, onStatsChange }: Props) {
+  const [isForcedLayout, setIsForcedLayout] = useState<'telex' | 'vni' | null>(null);
   const [typingMethod, setTypingMethod] = useState<'telex' | 'vni'>(() => {
     if (typeof window !== 'undefined') {
+      const savedRules = localStorage.getItem('viettyping_admin_rules');
+      if (savedRules) {
+        try {
+          const parsed = JSON.parse(savedRules);
+          if (parsed.forceLayout === 'telex' || parsed.forceLayout === 'vni') {
+            return parsed.forceLayout;
+          }
+        } catch (e) {}
+      }
       const saved = localStorage.getItem('typingMethod');
       if (saved === 'telex' || saved === 'vni') {
         return saved;
@@ -30,6 +40,21 @@ export default function TypingPractice({ task, onComplete, onStatsChange }: Prop
     }
     return 'telex';
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedRules = localStorage.getItem('viettyping_admin_rules');
+      if (savedRules) {
+        try {
+          const parsed = JSON.parse(savedRules);
+          if (parsed.forceLayout === 'telex' || parsed.forceLayout === 'vni') {
+            setIsForcedLayout(parsed.forceLayout);
+            setTypingMethod(parsed.forceLayout);
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
 
   const [input, setInput] = useState('');
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -177,6 +202,7 @@ export default function TypingPractice({ task, onComplete, onStatsChange }: Prop
   }, [task.time_limit_seconds]);
 
   const handleTypingMethodChange = (method: 'telex' | 'vni') => {
+    if (isForcedLayout) return;
     setTypingMethod(method);
     localStorage.setItem('typingMethod', method);
     handleRestart();
@@ -309,28 +335,34 @@ export default function TypingPractice({ task, onComplete, onStatsChange }: Prop
           
           <div className="flex items-center gap-3">
             {/* Kiểu gõ Telex / VNI */}
-            <div className="flex items-center bg-gray-100 p-0.5 rounded-xl border border-gray-200">
-              <button
-                onClick={() => handleTypingMethodChange('telex')}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  typingMethod === 'telex'
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-800'
-                }`}
-              >
-                TELEX
-              </button>
-              <button
-                onClick={() => handleTypingMethodChange('vni')}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  typingMethod === 'vni'
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-800'
-                }`}
-              >
-                VNI
-              </button>
-            </div>
+            {isForcedLayout ? (
+              <span className="flex items-center gap-1 px-3 py-1.5 text-xs font-black bg-indigo-50 border border-indigo-150 text-indigo-700 rounded-xl uppercase tracking-wider">
+                🔒 KHÓA GÕ: {isForcedLayout}
+              </span>
+            ) : (
+              <div className="flex items-center bg-gray-100 p-0.5 rounded-xl border border-gray-200">
+                <button
+                  onClick={() => handleTypingMethodChange('telex')}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    typingMethod === 'telex'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-800'
+                  }`}
+                >
+                  TELEX
+                </button>
+                <button
+                  onClick={() => handleTypingMethodChange('vni')}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    typingMethod === 'vni'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-800'
+                  }`}
+                >
+                  VNI
+                </button>
+              </div>
+            )}
 
             <div className="h-4 w-px bg-gray-200" />
 

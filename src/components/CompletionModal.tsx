@@ -16,6 +16,10 @@ interface CompletionModalProps {
     onRestart: () => void;
     onContinue: () => void;
     continueLabel?: string;
+    minRequirements?: {
+        minWpm: number;
+        minAccuracy: number;
+    };
 }
 
 function calculateScore(wpm: number, accuracy: number, incorrectCount: number): number {
@@ -33,6 +37,7 @@ export default function CompletionModal({
     onRestart,
     onContinue,
     continueLabel = 'Tiếp tục',
+    minRequirements,
 }: CompletionModalProps) {
     const { playSound } = useSound();
     const { studentInfo } = useStudent();
@@ -42,9 +47,14 @@ export default function CompletionModal({
     const animFrameRef = useRef<number>(0);
     const hasPlayedTada = useRef(false);
 
+    const minWpm = minRequirements?.minWpm ?? 0;
+    const minAccuracy = minRequirements?.minAccuracy ?? 0;
+    const meetsRequirements = stats.wpm >= minWpm && stats.accuracy >= minAccuracy;
+
     const finalScore = calculateScore(stats.wpm, stats.accuracy, stats.incorrectCount);
 
     const calculateStars = (acc: number) => {
+        if (!meetsRequirements) return 0;
         if (acc >= 90) return 3;
         if (acc >= 70) return 2;
         if (acc >= 50) return 1;
@@ -54,15 +64,18 @@ export default function CompletionModal({
     const stars = calculateStars(stats.accuracy);
 
     const getMessage = () => {
-        const nickname = studentInfo?.nickname || 'Con';
-        if (stars === 3) return `Tuyệt vời! ${nickname} làm tốt lắm! 🎉`;
-        if (stars === 2) return `Rất tốt! ${nickname} cố gắng thêm chút nữa nhé! 🌟`;
-        return `Cố lên! ${nickname} làm được mà! 💪`;
+        const name = studentInfo?.nickname || 'Học sinh';
+        if (!meetsRequirements) {
+            return `Chưa đạt yêu cầu của giáo viên rồi, cố lên ${name} ơi! 💪`;
+        }
+        if (stars === 3) return `Chúc mừng ${name}! Bạn đã hoàn thành xuất sắc! 🎉`;
+        if (stars === 2) return `Rất tốt! Cố gắng cải thiện thêm tốc độ nhé! 🌟`;
+        return `Hoàn thành bài tập! Hãy luyện tập thêm để cải thiện! 💪`;
     };
 
     // Fire confetti
     const fireConfetti = useCallback(() => {
-        const colors = ['#ff0a54', '#ff477e', '#ff7096', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa'];
+        const colors = ['#06b6d4', '#6366f1', '#d946ef', '#10b981', '#fbbf24', '#f43f5e'];
 
         // Side cannons
         const duration = 2000;
@@ -120,8 +133,12 @@ export default function CompletionModal({
                 // Tada + confetti when counter finishes
                 if (!hasPlayedTada.current) {
                     hasPlayedTada.current = true;
-                    playSound('tada');
-                    fireConfetti();
+                    if (meetsRequirements) {
+                        playSound('tada');
+                        fireConfetti();
+                    } else {
+                        playSound('wrong');
+                    }
                 }
 
                 // Show stars after a short delay
@@ -143,16 +160,16 @@ export default function CompletionModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-bounce-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 transform animate-bounce-in text-slate-100">
 
                 {/* Score Counter */}
                 <div className="text-center mb-6">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                        <IoTrophy className={`text-3xl transition-colors duration-500 ${isCountingDone ? 'text-yellow-500' : 'text-gray-300'}`} />
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Điểm số</span>
+                        <IoTrophy className={`text-3xl transition-colors duration-500 ${isCountingDone ? 'text-amber-400' : 'text-slate-500'}`} />
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Điểm số</span>
                     </div>
-                    <div className={`text-6xl font-black font-mono tabular-nums transition-all duration-300 ${isCountingDone ? 'text-amber-500 scale-110' : 'text-gray-700'}`}>
+                    <div className={`text-6xl font-black font-mono tabular-nums transition-all duration-300 ${isCountingDone ? 'text-amber-400 scale-110' : 'text-slate-350'}`}>
                         {displayScore.toLocaleString()}
                     </div>
                 </div>
@@ -170,52 +187,96 @@ export default function CompletionModal({
                             }}
                         >
                             {star <= stars ? (
-                                <IoStar className="text-yellow-400" />
+                                <IoStar className="text-amber-400" />
                             ) : (
-                                <IoStarOutline className="text-gray-300" />
+                                <IoStarOutline className="text-slate-700" />
                             )}
                         </span>
                     ))}
                 </div>
 
                 {/* Message */}
-                <h3 className={`text-xl font-bold text-center mb-5 text-gray-800 transition-all duration-500 ${showStars ? 'opacity-100' : 'opacity-0'}`}>
+                <h3 className={`text-xl font-extrabold text-center mb-5 text-slate-200 transition-all duration-500 ${showStars ? 'opacity-100' : 'opacity-0'}`}>
                     {getMessage()}
                 </h3>
 
+                {/* Requirements Warning Box */}
+                {!meetsRequirements && showStars && (
+                    <div className="mb-5 bg-rose-950/20 border border-rose-500/30 rounded-2xl p-4 text-center">
+                        <span className="text-xs font-black text-rose-450 uppercase tracking-widest block mb-2">🔴 CHƯA ĐẠT CHỈ TIÊU CỦA GIÁO VIÊN</span>
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-rose-500/10">
+                                <p className="text-slate-400 font-bold mb-0.5">Tốc độ</p>
+                                <p className={`text-base font-black ${stats.wpm >= minWpm ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {stats.wpm} / {minWpm} <span className="text-[10px] font-normal text-slate-500">WPM</span>
+                                </p>
+                            </div>
+                            <div className="bg-slate-950/60 p-2.5 rounded-xl border border-rose-500/10">
+                                <p className="text-slate-400 font-bold mb-0.5">Độ chính xác</p>
+                                <p className={`text-base font-black ${stats.accuracy >= minAccuracy ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {stats.accuracy}% / {minAccuracy}%
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-medium mt-3">
+                            Em cần gõ đạt tốc độ và độ chính xác tối thiểu ở trên để hoàn thành bài này.
+                        </p>
+                    </div>
+                )}
+
                 {/* Stats */}
                 <div className={`grid grid-cols-3 gap-3 mb-6 transition-all duration-500 ${showStars ? 'opacity-100' : 'opacity-0'}`}>
-                    <div className="bg-green-50 border border-green-100 p-3 rounded-xl text-center">
-                        <p className="text-xs text-gray-500 mb-1">Tốc độ</p>
-                        <p className="text-lg font-bold text-green-600">{stats.wpm}</p>
-                        <p className="text-xs text-gray-400">WPM</p>
+                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-center">
+                        <p className="text-xs text-slate-450 mb-1">Tốc độ</p>
+                        <p className="text-lg font-bold text-cyan-400">{stats.wpm}</p>
+                        <p className="text-xs text-slate-500">WPM</p>
                     </div>
-                    <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl text-center">
-                        <p className="text-xs text-gray-500 mb-1">Chính xác</p>
-                        <p className="text-lg font-bold text-blue-600">{stats.accuracy}%</p>
+                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-center">
+                        <p className="text-xs text-slate-450 mb-1">Chính xác</p>
+                        <p className="text-lg font-bold text-indigo-400">{stats.accuracy}%</p>
                     </div>
-                    <div className="bg-red-50 border border-red-100 p-3 rounded-xl text-center">
-                        <p className="text-xs text-gray-500 mb-1">Số lỗi</p>
-                        <p className="text-lg font-bold text-red-500">{stats.incorrectCount}</p>
+                    <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-center">
+                        <p className="text-xs text-slate-450 mb-1">Số lỗi</p>
+                        <p className="text-lg font-bold text-rose-500">{stats.incorrectCount}</p>
                     </div>
                 </div>
 
                 {/* Actions */}
                 <div className={`flex gap-3 transition-all duration-500 ${showStars ? 'opacity-100' : 'opacity-0'}`}>
-                    <button
-                        onClick={onRestart}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base"
-                    >
-                        <IoRefreshOutline className="text-lg shrink-0" />
-                        <span>Làm lại</span>
-                    </button>
-                    <button
-                        onClick={onContinue}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg whitespace-nowrap text-sm sm:text-base"
-                    >
-                        <span>{continueLabel}</span>
-                        <IoArrowForward className="text-lg shrink-0" />
-                    </button>
+                    {meetsRequirements ? (
+                        <>
+                            <button
+                                onClick={onRestart}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 border border-slate-750 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                            >
+                                <IoRefreshOutline className="text-lg shrink-0" />
+                                <span>Làm lại</span>
+                            </button>
+                            <button
+                                onClick={onContinue}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 rounded-xl font-black transition-colors shadow-lg shadow-cyan-500/10 whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                            >
+                                <span>{continueLabel}</span>
+                                <IoArrowForward className="text-lg shrink-0" />
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => window.location.href = '/typing'}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-850 text-slate-400 rounded-xl font-bold hover:bg-slate-800 border border-slate-800 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                            >
+                                <span>Thoát</span>
+                            </button>
+                            <button
+                                onClick={onRestart}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-r from-rose-500 to-red-600 text-slate-950 rounded-xl font-black transition-colors shadow-lg shadow-rose-500/10 whitespace-nowrap text-sm sm:text-base cursor-pointer"
+                            >
+                                <IoRefreshOutline className="text-lg shrink-0" />
+                                <span>Gõ lại</span>
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>
